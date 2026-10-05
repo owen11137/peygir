@@ -17,7 +17,9 @@
       <ul class="m-0 ps-3"><li th:each="e : ${importErrors}" th:text="${e}"></li></ul></div>
   </div>
 
-  <div class="row g-3">
+  <details class="card-x">
+    <summary class="fw-bold">افزودن کاربر یا ورود گروهی از Excel</summary>
+  <div class="row g-3 mt-2">
     <div class="col-lg-7">
       <form class="card-x" method="post" th:action="@{/admin/users}">
         <h2>افزودن کاربر</h2>
@@ -48,11 +50,55 @@
       </form>
     </div>
   </div>
+  </details>
 
-  <div class="card-x">
-    <h2>کاربران (<span th:text="${#lists.size(users)}">0</span>)</h2>
-    <div class="border-top pt-3 pb-2" th:each="u : ${users}">
+  <div class="card-x" id="usersList">
+    <h2>فهرست کاربران</h2>
+    <form method="get" th:action="@{/admin/users}" th:object="${filter}" class="row g-2 align-items-end mb-3">
+      <div class="col-md-6">
+        <label class="form-label" for="userSearch">جستجوی کاربران</label>
+        <input class="form-control" type="search" id="userSearch" th:field="*{search}"
+               placeholder="نام، نام کاربری یا نام تیم…">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" for="userTeamFilter">تیم</label>
+        <select class="form-select" id="userTeamFilter" th:field="*{teamId}">
+          <option value="">همهٔ تیم‌ها</option>
+          <option th:each="t : ${teams}" th:value="${t.id}" th:text="${t.name}"></option>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button class="btn btn-ac" type="submit"><i class="bi bi-search"></i> جستجو</button>
+        <a class="btn btn-outline-secondary" th:href="@{/admin/users}">پاک کردن</a>
+      </div>
+    </form>
+    <p class="small text-secondary" role="status">
+      <span th:text="${userPage.totalElements}">0</span> کاربر پیدا شد؛
+      <span th:text="${userPage.numberOfElements}">0</span> نفر در این صفحه.
+      برای ویرایش، روی نام کاربر کلیک کنید.
+    </p>
+    <div class="empty" th:if="${userPage.empty}">
+      <i class="bi bi-person-search"></i>کاربری با این مشخصات پیدا نشد.
+    </div>
+    <div class="user-team-group mb-4" th:each="t : ${teams}" th:if="${usersByTeam.containsKey(t.id)}">
+      <h3 class="user-team-title">
+        <i class="bi bi-people"></i> <span th:text="${t.name}"></span>
+        <span class="small text-secondary fw-normal">(<span th:text="${#lists.size(usersByTeam[t.id])}"></span> نفر در این صفحه)</span>
+      </h3>
+      <details class="user-entry" th:each="u : ${usersByTeam[t.id]}">
+        <summary class="user-summary">
+          <i class="bi bi-chevron-left user-expand"></i>
+          <strong th:text="${u.fullName}"></strong>
+          <span class="small text-secondary ltr" th:text="${u.username}"></span>
+          <span class="small text-secondary" th:text="${u.roleNames}"></span>
+          <span class="st" th:classappend="${u.active} ? 'st-success' : 'st-secondary'"
+                th:text="${u.active} ? 'فعال' : 'غیرفعال'"></span>
+        </summary>
+      <div class="pt-2 pb-3">
       <form class="m-0 user-form" method="post" th:action="@{/admin/users/{id}(id=${u.id})}">
+        <input type="hidden" name="search" th:value="${filter.search}">
+        <input type="hidden" name="filterTeamId" th:value="${filter.teamId}">
+        <input type="hidden" name="page" th:value="${userPage.number}">
         <div class="row g-2 align-items-end">
           <div class="col-md-3"><label class="form-label small text-secondary mb-0">نام</label>
             <input class="form-control form-control-sm" name="fullName" th:value="${u.fullName}" required maxlength="150">
@@ -83,10 +129,25 @@
         </details>
       </form>
       <form class="d-flex gap-2 mt-2 m-0" method="post" th:action="@{/admin/users/{id}/reset-password(id=${u.id})}">
+        <input type="hidden" name="search" th:value="${filter.search}">
+        <input type="hidden" name="filterTeamId" th:value="${filter.teamId}">
+        <input type="hidden" name="page" th:value="${userPage.number}">
         <input class="form-control form-control-sm ltr" name="password" placeholder="رمز جدید (حداقل ۶ نویسه)" minlength="6" required autocomplete="new-password" style="max-width:260px">
         <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-key"></i> بازنشانی رمز</button>
       </form>
+      </div>
+      </details>
     </div>
+    <nav class="d-flex align-items-center justify-content-between gap-2" aria-label="صفحه‌بندی کاربران"
+         th:if="${userPage.totalPages > 1}">
+      <a class="btn btn-outline-secondary" th:if="${userPage.hasPrevious()}"
+         th:href="@{/admin/users(search=${filter.search},teamId=${filter.teamId},page=${userPage.number - 1})}">صفحهٔ قبل</a>
+      <span class="btn btn-outline-secondary disabled" th:unless="${userPage.hasPrevious()}">صفحهٔ قبل</span>
+      <span class="small text-secondary">صفحهٔ <span th:text="${userPage.number + 1}"></span> از <span th:text="${userPage.totalPages}"></span></span>
+      <a class="btn btn-outline-secondary" th:if="${userPage.hasNext()}"
+         th:href="@{/admin/users(search=${filter.search},teamId=${filter.teamId},page=${userPage.number + 1})}">صفحهٔ بعد</a>
+      <span class="btn btn-outline-secondary disabled" th:unless="${userPage.hasNext()}">صفحهٔ بعد</span>
+    </nav>
   </div>
 </section>
 </body>

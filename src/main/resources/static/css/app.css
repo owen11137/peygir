@@ -71,6 +71,15 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.92rem}
 .req::after{content:" *";color:var(--danger)}
 .ltr{direction:ltr;text-align:left}
 
+/* ---- users grouped by team ---- */
+.user-team-title{font-size:1rem;font-weight:700;background:var(--soft);border-radius:8px;padding:10px 12px;margin:0}
+.user-entry{border-bottom:1px solid var(--bd)}
+.user-summary{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:12px 0;cursor:pointer;list-style:none}
+.user-summary::-webkit-details-marker{display:none}
+.user-summary:hover{color:var(--ac)}
+.user-expand{font-size:.8rem;transition:transform .15s}
+.user-entry[open]>.user-summary .user-expand{transform:rotate(-90deg)}
+
 /* ---- status badges ---- */
 .st{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.78rem;font-weight:600;white-space:nowrap}
 .st-secondary{background:var(--secondary-bg);color:var(--secondary)}

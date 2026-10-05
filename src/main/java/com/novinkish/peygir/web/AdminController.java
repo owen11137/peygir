@@ -6,6 +6,7 @@ import com.novinkish.peygir.security.PeygirUser;
 import com.novinkish.peygir.service.AdminService;
 import com.novinkish.peygir.service.ExcelService;
 import com.novinkish.peygir.service.SettingService;
+import com.novinkish.peygir.service.UserFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -77,8 +78,12 @@ public class AdminController {
 
     // ---------------------------------------------------------------- کاربران
     @GetMapping("/users")
-    public String usersPage(Model model) {
-        model.addAttribute("users", users.findAllByOrderByFullName());
+    public String usersPage(@ModelAttribute("filter") UserFilter filter,
+                            @RequestParam(defaultValue = "0") int page, Model model) {
+        var userPage = admin.searchUsers(filter, page);
+        model.addAttribute("userPage", userPage);
+        model.addAttribute("usersByTeam", userPage.getContent().stream()
+                .collect(Collectors.groupingBy(u -> u.getTeam().getId())));
         model.addAttribute("teams", teams.findAllByOrderByName());
         model.addAttribute("roles", roles.findAllByOrderByName());
         model.addAttribute("permissions", Permission.values());
@@ -99,17 +104,30 @@ public class AdminController {
                              @RequestParam Long teamId,
                              @RequestParam(name = "roleId", required = false) List<Long> roleIds,
                              @RequestParam(defaultValue = "false") boolean active,
-                             @RequestParam(name = "perm", required = false) List<Permission> perms, RedirectAttributes ra) {
+                             @RequestParam(name = "perm", required = false) List<Permission> perms,
+                             @RequestParam(defaultValue = "") String search,
+                             @RequestParam(required = false) Long filterTeamId,
+                             @RequestParam(defaultValue = "0") int page, RedirectAttributes ra) {
         admin.updateUser(me.getId(), id, fullName, teamId, roleIds, active, perms);
         ra.addFlashAttribute("success", "نقش‌ها و دسترسی‌های کاربر ذخیره شد");
-        return "redirect:/admin/users";
+        return usersRedirect(search, filterTeamId, page, ra);
     }
 
     @PostMapping("/users/{id}/reset-password")
-    public String resetPassword(@PathVariable Long id, @RequestParam String password, RedirectAttributes ra) {
+    public String resetPassword(@PathVariable Long id, @RequestParam String password,
+                                @RequestParam(defaultValue = "") String search,
+                                @RequestParam(required = false) Long filterTeamId,
+                                @RequestParam(defaultValue = "0") int page, RedirectAttributes ra) {
         admin.resetPassword(id, password);
         ra.addFlashAttribute("success", "رمز جدید تنظیم شد؛ کاربر در اولین ورود باید آن را عوض کند");
-        return "redirect:/admin/users";
+        return usersRedirect(search, filterTeamId, page, ra);
+    }
+
+    private static String usersRedirect(String search, Long teamId, int page, RedirectAttributes ra) {
+        if (!search.isBlank()) ra.addAttribute("search", search);
+        if (teamId != null) ra.addAttribute("teamId", teamId);
+        if (page > 0) ra.addAttribute("page", page);
+        return "redirect:/admin/users#usersList";
     }
 
     @PostMapping("/users/import")

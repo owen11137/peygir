@@ -8,6 +8,9 @@ import com.novinkish.peygir.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +59,20 @@ public class AdminService {
     }
 
     // ---------------------------------------------------------------- کاربران
+    @Transactional(readOnly = true)
+    public Page<AppUser> searchUsers(UserFilter filter, int page) {
+        int pageSize = 25;
+        int pageNumber = Math.max(0, Math.min(page, Integer.MAX_VALUE / pageSize));
+        var spec = filter.toSpec();
+        Sort sort = Sort.by("team.name", "fullName", "id");
+        Page<AppUser> result = users.findAll(spec, PageRequest.of(pageNumber, pageSize, sort));
+        if (pageNumber > 0 && result.isEmpty()) {
+            int lastPage = Math.max(0, result.getTotalPages() - 1);
+            result = users.findAll(spec, PageRequest.of(lastPage, pageSize, sort));
+        }
+        return result;
+    }
+
     @Transactional
     public void createUser(String username, String fullName, Long teamId, Collection<Long> roleIds, String password) {
         username = required(username, "نام کاربری را وارد کنید").toLowerCase();
