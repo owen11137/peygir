@@ -28,6 +28,9 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http, UserRepository users) throws Exception {
         http
             .addFilterBefore(new SessionRefreshFilter(users), AuthorizationFilter.class)
+            .headers(h -> h.httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(false)
+                .requestMatcher(r -> r.isSecure() && !isLocalHost(r.getServerName()))))
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/css/**", "/js/**", "/fonts/**", "/error").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("PERM_ADMIN_PANEL")
@@ -52,5 +55,11 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login?logout")
                 .permitAll());
         return http.build();
+    }
+
+    // HSTS روی localhost می‌تواند HTTP:8080 را قبل از هدایت، به HTTPS:8080 تبدیل کند.
+    private static boolean isLocalHost(String host) {
+        return "localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)
+                || "::1".equals(host) || "[::1]".equals(host);
     }
 }
