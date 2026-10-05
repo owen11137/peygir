@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('کاربران', ~{::section})}">
+<head><title>کاربران</title></head>
+<body>
+<section>
+  <div class="page-head">
+    <div><h1>کاربران</h1>
+      <div class="sub">هر کاربر یک تیم و هر تعداد نقش می‌تواند داشته باشد. علاوه بر نقش‌ها، دسترسی‌ها را برای هر نفر جداگانه هم می‌توانید بدهید یا بگیرید؛ تغییرات از درخواست بعدی کاربر اعمال می‌شود.</div></div>
+    <div class="actions"><a class="btn btn-outline-ac" th:href="@{/admin/users/export}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a>
+      <a class="btn btn-outline-secondary" th:href="@{/admin/roles}"><i class="bi bi-shield-check"></i> مدیریت نقش‌ها</a></div>
+  </div>
+
+  <div class="flash err" th:if="${importErrors}">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div><strong>ردیف‌های ردشده در ورود گروهی:</strong>
+      <ul class="m-0 ps-3"><li th:each="e : ${importErrors}" th:text="${e}"></li></ul></div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <form class="card-x" method="post" th:action="@{/admin/users}">
+        <h2>افزودن کاربر</h2>
+        <div class="row g-2">
+          <div class="col-md-6"><label class="form-label req">نام و نام خانوادگی</label><input class="form-control" name="fullName" required maxlength="150"></div>
+          <div class="col-md-6"><label class="form-label req">نام کاربری</label><input class="form-control ltr" name="username" required maxlength="80" autocomplete="off"></div>
+          <div class="col-md-6"><label class="form-label req">تیم</label>
+            <select class="form-select" name="teamId" required><option value="">انتخاب…</option><option th:each="t : ${teams}" th:if="${t.active}" th:value="${t.id}" th:text="${t.name}"></option></select></div>
+          <div class="col-md-6"><label class="form-label req">رمز اولیه</label><input class="form-control ltr" name="password" minlength="6" required autocomplete="new-password"></div>
+          <div class="col-12"><label class="form-label">نقش‌ها</label>
+            <div class="d-flex flex-wrap gap-3">
+              <div class="form-check" th:each="r : ${roles}"><input class="form-check-input" type="checkbox" name="roleId" th:value="${r.id}" th:id="'nr'+${r.id}"><label class="form-check-label" th:for="'nr'+${r.id}" th:text="${r.name}"></label></div>
+            </div></div>
+        </div>
+        <button class="btn btn-ac mt-3" type="submit"><i class="bi bi-person-plus"></i> ساخت کاربر</button>
+        <div class="text-secondary small mt-2">بعد از ساخت، دسترسی‌های جداگانه‌ی او را از فهرست پایین تنظیم کنید.</div>
+      </form>
+    </div>
+    <div class="col-lg-5">
+      <form class="card-x" method="post" enctype="multipart/form-data" th:action="@{/admin/users/import}">
+        <h2>ورود گروهی از Excel</h2>
+        <p class="text-secondary small">ستون‌ها: تیم، نام و نام خانوادگی، نام کاربری، نقش (چند نقش با ویرگول)، رمز اولیه (اختیاری). تیم‌های ناموجود ساخته می‌شوند.</p>
+        <input class="form-control mb-2" type="file" name="file" accept=".xlsx,.xls" required>
+        <div class="d-flex gap-2">
+          <button class="btn btn-ac" type="submit"><i class="bi bi-upload"></i> ورود کاربران</button>
+          <a class="btn btn-outline-secondary" th:href="@{/admin/users/template}"><i class="bi bi-download"></i> فایل نمونه</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card-x">
+    <h2>کاربران (<span th:text="${#lists.size(users)}">0</span>)</h2>
+    <div class="border-top pt-3 pb-2" th:each="u : ${users}">
+      <form class="m-0 user-form" method="post" th:action="@{/admin/users/{id}(id=${u.id})}">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3"><label class="form-label small text-secondary mb-0">نام</label>
+            <input class="form-control form-control-sm" name="fullName" th:value="${u.fullName}" required maxlength="150">
+            <div class="small text-secondary ltr" th:text="${u.username}"></div></div>
+          <div class="col-6 col-md-2"><label class="form-label small text-secondary mb-0">تیم</label>
+            <select class="form-select form-select-sm" name="teamId"><option th:each="t : ${teams}" th:value="${t.id}" th:text="${t.name}" th:selected="${t.id == u.team.id}"></option></select></div>
+          <div class="col-12 col-md-4"><label class="form-label small text-secondary mb-0">نقش‌ها (با تغییر، تیک دسترسی‌ها از روی نقش‌ها تنظیم می‌شود)</label>
+            <div class="d-flex flex-wrap gap-3">
+              <div class="form-check" th:each="r : ${roles}">
+                <input class="form-check-input role-check" type="checkbox" name="roleId" th:value="${r.id}" th:id="'r'+${u.id}+'_'+${r.id}" th:checked="${u.hasRole(r)}" th:attr="data-perms=${r.permissionCsv}">
+                <label class="form-check-label small" th:for="'r'+${u.id}+'_'+${r.id}" th:text="${r.name}"></label></div>
+            </div></div>
+          <div class="col-6 col-md-1"><div class="form-check"><input class="form-check-input" type="checkbox" name="active" value="true" th:id="'ua'+${u.id}" th:checked="${u.active}"><label class="form-check-label small" th:for="'ua'+${u.id}">فعال</label></div></div>
+          <div class="col-6 col-md-auto"><button class="btn btn-sm btn-outline-ac" type="submit">ذخیره</button></div>
+          <div class="col-auto" th:if="${u.hasCustomPermissions()}"><span class="st st-warning">دسترسی سفارشی</span></div>
+        </div>
+        <details class="mt-2">
+          <summary class="small text-secondary" style="cursor:pointer">دسترسی‌های این کاربر</summary>
+          <div class="row g-2 mt-1">
+            <div class="col-md-6 col-xl-4" th:each="p : ${permissions}">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="perm" th:value="${p}" th:id="'p'+${u.id}+${p}" th:checked="${u.effectivePermissions().contains(p)}">
+                <label class="form-check-label" th:for="'p'+${u.id}+${p}"><strong th:text="${p.label}"></strong>
+                  <span class="d-block text-secondary small" th:text="${p.description}"></span></label>
+              </div>
+            </div>
+          </div>
+        </details>
+      </form>
+      <form class="d-flex gap-2 mt-2 m-0" method="post" th:action="@{/admin/users/{id}/reset-password(id=${u.id})}">
+        <input class="form-control form-control-sm ltr" name="password" placeholder="رمز جدید (حداقل ۶ نویسه)" minlength="6" required autocomplete="new-password" style="max-width:260px">
+        <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-key"></i> بازنشانی رمز</button>
+      </form>
+    </div>
+  </div>
+</section>
+</body>
+</html>

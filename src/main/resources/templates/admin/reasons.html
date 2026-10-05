@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('علت‌ها', ~{::section})}">
+<head><title>علت‌ها</title></head>
+<body>
+<section>
+  <div class="page-head"><div><h1>علت‌های عدم پاسخگویی</h1><div class="sub">این فهرست در فرم ثبت گزارش نمایش داده می‌شود. علت غیرفعال فقط از فرم‌های جدید حذف می‌شود و گزارش‌های قبلی دست‌نخورده می‌مانند.</div></div>
+    <div class="actions"><a class="btn btn-outline-ac" th:href="@{/admin/reasons/export}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a></div></div>
+
+  <form class="card-x" method="post" th:action="@{/admin/reasons}">
+    <h2>افزودن علت</h2>
+    <div class="row g-2 align-items-center">
+      <div class="col-md-5"><input class="form-control" name="title" placeholder="عنوان علت" required maxlength="200"></div>
+      <div class="col-md-2"><input class="form-control" name="sortOrder" type="number" value="10" title="ترتیب نمایش"></div>
+      <div class="col-md-3">
+        <div class="form-check"><input class="form-check-input" type="checkbox" name="requiresDetail" value="true" id="rd0"><label class="form-check-label" for="rd0">توضیحات اجباری باشد</label></div>
+        <input type="hidden" name="active" value="true">
+      </div>
+      <div class="col-auto"><button class="btn btn-ac" type="submit"><i class="bi bi-plus-lg"></i> افزودن</button></div>
+    </div>
+  </form>
+
+  <div class="card-x">
+    <h2>علت‌های موجود</h2>
+    <form class="row g-2 align-items-center border-top pt-2 pb-2 m-0" method="post" th:action="@{/admin/reasons}" th:each="x : ${reasons}">
+      <input type="hidden" name="id" th:value="${x.id}">
+      <div class="col-md-5"><input class="form-control form-control-sm" name="title" th:value="${x.title}" required maxlength="200"></div>
+      <div class="col-6 col-md-2"><input class="form-control form-control-sm" name="sortOrder" type="number" th:value="${x.sortOrder}" title="ترتیب نمایش"></div>
+      <div class="col-6 col-md-2"><div class="form-check"><input class="form-check-input" type="checkbox" name="requiresDetail" value="true" th:id="'rq'+${x.id}" th:checked="${x.requiresDetail}"><label class="form-check-label small" th:for="'rq'+${x.id}">توضیح اجباری</label></div></div>
+      <div class="col-6 col-md-1"><div class="form-check"><input class="form-check-input" type="checkbox" name="active" value="true" th:id="'ac'+${x.id}" th:checked="${x.active}"><label class="form-check-label small" th:for="'ac'+${x.id}">فعال</label></div></div>
+      <div class="col-6 col-md-auto"><button class="btn btn-sm btn-outline-ac" type="submit">ذخیره</button></div>
+    </form>
+  </div>
+</section>
+</body>
+</html>

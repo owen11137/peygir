@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout(title, content)">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title} + ' | پیگیر'">پیگیر</title>
+  <link rel="stylesheet" th:href="@{/css/bootstrap.rtl.min.css}">
+  <link rel="stylesheet" th:href="@{/css/bootstrap-icons.min.css}">
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+  <script>try{var t=localStorage.getItem('peygir-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><i class="bi bi-telephone-x"></i><div>پیگیر<small>پیگیری عدم پاسخگویی تیم‌ها</small></div></div>
+
+    <nav class="nav-group" sec:authorize="hasAnyAuthority('PERM_REPORT_CREATE','PERM_TEAM_APPROVE')">
+      <div class="nav-title">گزارش‌ها</div>
+      <a class="nav-link" sec:authorize="hasAuthority('PERM_REPORT_CREATE')" th:classappend="${path == '/reports/new'} ? 'active'" th:href="@{/reports/new}"><i class="bi bi-plus-circle"></i> ثبت گزارش جدید</a>
+      <a class="nav-link" th:classappend="${path == '/reports'} ? 'active'" th:href="@{/reports}"><i class="bi bi-journal-text"></i> گزارش‌های من و تیم</a>
+      <a class="nav-link" sec:authorize="hasAuthority('PERM_TEAM_APPROVE')" th:classappend="${path == '/approvals'} ? 'active'" th:href="@{/approvals}"><i class="bi bi-check2-square"></i> صف تأیید
+        <span class="badge-count" th:if="${pendingCount != null and pendingCount > 0}" th:text="${pendingCount}">0</span></a>
+    </nav>
+    <nav class="nav-group" sec:authorize="hasAnyAuthority('PERM_TEAM_STATS','PERM_VIEW_ALL')">
+      <div class="nav-title">مدیریت</div>
+      <a class="nav-link" th:classappend="${path == '/dashboard'} ? 'active'" th:href="@{/dashboard}"><i class="bi bi-speedometer2"></i> داشبورد</a>
+      <a class="nav-link" sec:authorize="hasAuthority('PERM_VIEW_ALL')" th:classappend="${path == '/reports/all'} ? 'active'" th:href="@{/reports/all}"><i class="bi bi-list-ul"></i> همه‌ی گزارش‌ها</a>
+    </nav>
+    <nav class="nav-group" sec:authorize="hasAuthority('PERM_ADMIN_PANEL')">
+      <div class="nav-title">مدیریت سیستم</div>
+      <a class="nav-link" th:classappend="${path == '/admin/teams'} ? 'active'" th:href="@{/admin/teams}"><i class="bi bi-diagram-3"></i> تیم‌ها</a>
+      <a class="nav-link" th:classappend="${path == '/admin/users'} ? 'active'" th:href="@{/admin/users}"><i class="bi bi-people"></i> کاربران</a>
+      <a class="nav-link" th:classappend="${path == '/admin/roles'} ? 'active'" th:href="@{/admin/roles}"><i class="bi bi-shield-check"></i> نقش‌ها و دسترسی‌ها</a>
+      <a class="nav-link" th:classappend="${path == '/admin/reasons'} ? 'active'" th:href="@{/admin/reasons}"><i class="bi bi-tags"></i> علت‌ها</a>
+      <a class="nav-link" th:classappend="${path == '/admin/settings'} ? 'active'" th:href="@{/admin/settings}"><i class="bi bi-gear"></i> تنظیمات</a>
+    </nav>
+    <div class="side-foot">
+      <a class="nav-link" style="padding:6px 0" th:href="@{/password}"><i class="bi bi-key"></i> تغییر رمز عبور</a>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="icon-btn" id="menuBtn" type="button" aria-label="منو"><i class="bi bi-list"></i></button>
+      <div class="who" th:if="${me != null}">
+        <div class="avatar" th:text="${#strings.substring(me.fullName,0,1)}">م</div>
+        <div><strong th:text="${me.fullName}">نام کاربر</strong>
+          <small><span th:text="${me.roleNames}">نقش</span> · <span th:text="${me.teamName}">تیم</span></small></div>
+      </div>
+      <button class="icon-btn" id="themeBtn" type="button" title="تم روشن/تیره"><i class="bi bi-circle-half"></i></button>
+      <form th:action="@{/logout}" method="post" class="m-0">
+        <button class="icon-btn" type="submit" title="خروج"><i class="bi bi-box-arrow-left"></i></button>
+      </form>
+    </header>
+
+    <main class="content">
+      <div class="flash ok" th:if="${success}"><i class="bi bi-check-circle"></i><span th:text="${success}"></span></div>
+      <div class="flash err" th:if="${error}"><i class="bi bi-exclamation-octagon"></i><span th:text="${error}"></span></div>
+      <th:block th:replace="${content}"></th:block>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

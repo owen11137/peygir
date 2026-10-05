@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('گزارش‌ها', ~{::section})}">
+<head><title>گزارش‌ها</title></head>
+<body>
+<section>
+  <div class="page-head">
+    <div>
+      <h1 th:text="${pageTitle}">گزارش‌ها</h1>
+      <div class="sub"><span th:text="${#lists.size(reports)}">0</span> گزارش</div>
+    </div>
+    <div class="actions">
+      <a class="btn btn-ac" th:if="${mode == 'team'}" sec:authorize="hasAuthority('PERM_REPORT_CREATE')" th:href="@{/reports/new}"><i class="bi bi-plus-lg"></i> گزارش جدید</a>
+      <a class="btn btn-outline-ac" th:if="${mode == 'approvals'}" sec:authorize="hasAuthority('PERM_EXPORT')" th:href="@{/reports/export(pending=true)}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a>
+    </div>
+  </div>
+
+  <form class="card-x" method="get" th:if="${mode != 'approvals'}">
+    <div class="row g-3 align-items-end">
+      <div class="col-6 col-md-3 col-xl-2" th:if="${mode == 'team'}">
+        <label class="form-label">نمایش</label>
+        <select class="form-select" name="scope">
+          <option value="all" th:selected="${scope == 'all'}">من و تیمم</option>
+          <option value="mine" th:selected="${scope == 'mine'}">فقط گزارش‌های من</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label class="form-label">وضعیت</label>
+        <select class="form-select" name="status">
+          <option value="">همه</option>
+          <option th:each="s : ${allStatuses}" th:value="${s}" th:text="${s.label}" th:selected="${filter.status == s}"></option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3 col-xl-2" th:if="${mode == 'all'}">
+        <label class="form-label">تیم تماس‌گیرنده</label>
+        <select class="form-select" name="callerTeamId">
+          <option value="">همه</option>
+          <option th:each="t : ${teams}" th:value="${t.id}" th:text="${t.name}" th:selected="${filter.callerTeamId == t.id}"></option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label class="form-label">تیم هدف</label>
+        <select class="form-select" name="targetTeamId">
+          <option value="">همه</option>
+          <option th:each="t : ${teams}" th:value="${t.id}" th:text="${t.name}" th:selected="${filter.targetTeamId == t.id}"></option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label class="form-label">علت</label>
+        <select class="form-select" name="reasonId">
+          <option value="">همه</option>
+          <option th:each="x : ${reasons}" th:value="${x.id}" th:text="${x.title}" th:selected="${filter.reasonId == x.id}"></option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label class="form-label">از تاریخ</label>
+        <input class="form-control ltr" name="from" placeholder="1405/07/01" th:value="${filter.from}">
+      </div>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label class="form-label">تا تاریخ</label>
+        <input class="form-control ltr" name="to" placeholder="1405/07/30" th:value="${filter.to}">
+      </div>
+      <div class="col-12 col-xl-auto d-flex gap-2">
+        <button class="btn btn-ac" type="submit"><i class="bi bi-funnel"></i> اعمال فیلتر</button>
+        <a class="btn btn-outline-secondary" th:href="@{${path}}">پاک‌کردن</a>
+        <button class="btn btn-outline-ac" type="submit" sec:authorize="hasAuthority('PERM_EXPORT')" th:formaction="@{/reports/export}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="card-x p-0">
+    <div class="table-wrap">
+      <table class="tbl" th:if="${!#lists.isEmpty(reports)}">
+        <thead><tr>
+          <th>شماره</th><th>وضعیت</th><th>تماس‌گیرنده</th><th>تیم هدف</th><th>موضوع</th><th>علت</th><th>زمان تماس</th><th></th>
+        </tr></thead>
+        <tbody>
+        <tr th:each="r : ${reports}">
+          <td><a th:href="@{/reports/{id}(id=${r.id})}" th:text="${r.trackingNo}">PG-00001</a></td>
+          <td><span class="st" th:classappend="'st-' + ${r.status.cssClass}" th:text="${r.status.label}"></span></td>
+          <td><span th:text="${r.caller.fullName}"></span><div class="text-secondary small" th:text="${r.callerTeam.name}"></div></td>
+          <td><strong th:text="${r.targetTeam.name}"></strong><div class="text-secondary small" th:text="${r.targetPerson}"></div></td>
+          <td th:text="${r.subject}"></td>
+          <td th:text="${r.reason.title}"></td>
+          <td class="text-nowrap" th:text="${@jalali.dt(r.contactAt)}"></td>
+          <td class="text-nowrap"><a class="btn btn-sm btn-outline-ac" th:href="@{/reports/{id}(id=${r.id})}">
+            <span th:text="${mode == 'approvals'} ? 'بررسی' : 'جزئیات'">جزئیات</span></a></td>
+        </tr>
+        </tbody>
+      </table>
+      <div class="empty" th:if="${#lists.isEmpty(reports)}">
+        <i class="bi bi-inbox"></i>
+        <span th:text="${mode == 'approvals'} ? 'گزارشی در انتظار تأیید شما نیست.' : 'گزارشی پیدا نشد.'">گزارشی پیدا نشد.</span>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

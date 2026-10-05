@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('داشبورد', ~{::section})}">
+<head><title>داشبورد</title></head>
+<body>
+<section>
+  <div class="page-head">
+    <div>
+      <h1><span sec:authorize="hasAuthority('PERM_VIEW_ALL')">داشبورد مدیریت</span><span sec:authorize="!hasAuthority('PERM_VIEW_ALL')">آمار تیم</span></h1>
+      <div class="sub">فقط گزارش‌های تأییدشده به بعد · <span class="live">زنده</span> · آخرین به‌روزرسانی: <span id="updatedAt">—</span></div>
+    </div>
+    <div class="actions">
+      <select class="form-select form-select-sm" id="refreshSel" title="فاصله‌ی به‌روزرسانی خودکار" style="width:auto"></select>
+      <button class="icon-btn" id="btnReload" type="button" title="به‌روزرسانی همین حالا"><i class="bi bi-arrow-clockwise"></i></button>
+      <a class="btn btn-outline-ac" id="btnExport" sec:authorize="hasAuthority('PERM_EXPORT')" th:href="@{/dashboard/export}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a>
+      <a class="btn btn-ac" id="btnAll" sec:authorize="hasAuthority('PERM_VIEW_ALL')" th:href="@{/reports/all}"><i class="bi bi-list-ul"></i> فهرست گزارش‌های بازه</a>
+    </div>
+  </div>
+
+  <div class="card-x range-bar">
+    <div class="chips" id="chips"></div>
+    <div class="range-custom">
+      <span class="text-secondary small">بازه‌ی دلخواه (شمسی):</span>
+      <label class="small" for="fromIn">از</label><input class="form-control form-control-sm ltr" id="fromIn" placeholder="1405/07/01" maxlength="10">
+      <label class="small" for="toIn">تا</label><input class="form-control form-control-sm ltr" id="toIn" placeholder="1405/07/30" maxlength="10">
+      <button class="btn btn-sm btn-ac" id="applyBtn" type="button">نمایش بازه</button>
+    </div>
+    <div class="text-danger small mt-1" id="rangeErr" hidden></div>
+    <div class="small text-secondary mt-1" id="rangeText">—</div>
+  </div>
+
+  <div class="insights" id="insights"></div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="lbl">گزارش‌های بازه</div><div class="val"><span id="kTotal">—</span> <span id="kDelta"></span></div></div>
+    <div class="kpi"><div class="lbl">میانگین روزانه</div><div class="val" id="kPerDay">—</div></div>
+    <div class="kpi"><div class="lbl">منتظر بررسی مدیریت</div><div class="val" id="kAwaiting">—</div></div>
+    <div class="kpi"><div class="lbl">بسته‌شده</div><div class="val"><span id="kClosed">—</span> <small id="kClosedP"></small></div></div>
+    <div class="kpi"><div class="lbl">بیشترین عدم پاسخ</div><div class="val" style="font-size:1.25rem"><span id="kTop">—</span> <small id="kTopCount"></small></div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card-x"><h2>مقایسه‌ی تیم‌ها با بازه‌ی قبل <span class="text-secondary small fw-normal">(تیمی که پاسخ نداده)</span></h2><div class="chart-box"><canvas id="chCompare"></canvas></div></div>
+    <div class="card-x"><h2>روند در زمان <span class="text-secondary small fw-normal" id="bucketName"></span></h2><div class="chart-box"><canvas id="chTrend"></canvas></div></div>
+    <div class="card-x"><h2>علت‌های عدم پاسخ</h2><div class="chart-box"><canvas id="chReasons"></canvas></div></div>
+    <div class="card-x"><h2>افرادی که بیشترین عدم پاسخ را داشته‌اند</h2>
+      <div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>شخص</th><th>تیم</th><th>تعداد</th></tr></thead><tbody id="tPersons"></tbody></table></div></div>
+  </div>
+
+  <div class="card-x p-0">
+    <div class="p-3 pb-0"><h2>عملکرد تیم‌ها <span class="text-secondary small fw-normal">(▲ قرمز = بدتر نسبت به بازه‌ی قبل، ▼ سبز = بهتر)</span></h2></div>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>تیم</th><th>تعداد عدم پاسخ</th><th>سهم از کل</th><th>بازه‌ی قبل</th><th>تغییر</th><th>میانگین تلاش</th><th>بسته‌نشده</th></tr></thead><tbody id="tTeams"></tbody></table></div>
+  </div>
+
+  <div class="card-x">
+    <h2>ماتریس تیم‌ها <span class="text-secondary small fw-normal">(سطر: تیم تماس‌گیرنده · ستون: تیمی که پاسخ نداده)</span></h2>
+    <div class="table-wrap"><table class="tbl matrix" id="tMatrix"></table></div>
+  </div>
+
+  <div class="card-x p-0">
+    <div class="p-3 pb-0"><h2>آخرین گزارش‌های بازه</h2></div>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th>شماره</th><th>تماس‌گیرنده</th><th>تیم هدف</th><th>شخص</th><th>علت</th><th>زمان تماس</th><th>وضعیت</th></tr></thead><tbody id="tLatest"></tbody></table></div>
+  </div>
+
+  <script th:src="@{/js/chart.umd.js}"></script>
+  <script th:inline="javascript">window.PEYGIR_REFRESH = /*[[${refreshSeconds}]]*/ 60; window.PEYGIR_BASE = /*[[@{/}]]*/ '/';</script>
+  <script th:src="@{/js/dashboard.js}"></script>
+</section>
+</body>
+</html>

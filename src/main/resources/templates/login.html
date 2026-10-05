@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ورود | پیگیر</title>
+  <link rel="stylesheet" th:href="@{/css/bootstrap.rtl.min.css}">
+  <link rel="stylesheet" th:href="@{/css/bootstrap-icons.min.css}">
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="auth">
+  <form class="auth-card" th:action="@{/login}" method="post">
+    <div class="logo"><i class="bi bi-telephone-x"></i></div>
+    <h1 class="h4 fw-bold mb-1">ورود به پیگیر</h1>
+    <p class="text-secondary small mb-4">سامانه ثبت و پیگیری عدم پاسخگویی تیم‌ها</p>
+    <div class="flash err" th:if="${param.error}"><i class="bi bi-exclamation-octagon"></i><span>نام کاربری یا رمز عبور درست نیست، یا حساب غیرفعال است.</span></div>
+    <div class="flash ok" th:if="${param.logout}"><i class="bi bi-check-circle"></i><span>با موفقیت خارج شدید.</span></div>
+    <div class="mb-3">
+      <label class="form-label" for="username">نام کاربری</label>
+      <input class="form-control ltr" id="username" name="username" autocomplete="username" autofocus required>
+    </div>
+    <div class="mb-4">
+      <label class="form-label" for="password">رمز عبور</label>
+      <input class="form-control ltr" id="password" name="password" type="password" autocomplete="current-password" required>
+    </div>
+    <button class="btn btn-ac w-100 py-2" type="submit">ورود</button>
+  </form>
+</div>
+</body>
+</html>

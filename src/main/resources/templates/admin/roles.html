@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('نقش‌ها و دسترسی‌ها', ~{::section})}">
+<head><title>نقش‌ها</title></head>
+<body>
+<section>
+  <div class="page-head">
+    <div><h1>نقش‌ها و دسترسی‌ها</h1>
+      <div class="sub">هر نقش مجموعه‌ای از دسترسی‌هاست. می‌توانید نقش جدید بسازید، دسترسی همه‌ی نقش‌ها (حتی پیش‌فرض‌ها) را کم و زیاد کنید و نقش را به کاربران بدهید یا بگیرید (از صفحه‌ی کاربران). تغییر یک نقش برای همه‌ی دارندگانش از درخواست بعدی اعمال می‌شود.</div></div>
+    <div class="actions"><a class="btn btn-outline-ac" th:href="@{/admin/roles/export}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a>
+      <a class="btn btn-outline-secondary" th:href="@{/admin/users}"><i class="bi bi-people"></i> کاربران</a></div>
+  </div>
+
+  <form class="card-x" method="post" th:action="@{/admin/roles}">
+    <h2>نقش جدید</h2>
+    <div class="row g-2">
+      <div class="col-md-4"><label class="form-label req">نام نقش</label><input class="form-control" name="name" required maxlength="100"></div>
+      <div class="col-md-8"><label class="form-label">توضیح</label><input class="form-control" name="description" maxlength="300"></div>
+      <div class="col-12"><label class="form-label">دسترسی‌ها</label>
+        <div class="row g-2">
+          <div class="col-md-6 col-xl-4" th:each="p : ${permissions}"><div class="form-check">
+            <input class="form-check-input" type="checkbox" name="perm" th:value="${p}" th:id="'np'+${p}">
+            <label class="form-check-label" th:for="'np'+${p}"><strong th:text="${p.label}"></strong><span class="d-block text-secondary small" th:text="${p.description}"></span></label></div></div>
+        </div></div>
+    </div>
+    <button class="btn btn-ac mt-3" type="submit"><i class="bi bi-plus-lg"></i> ساخت نقش</button>
+  </form>
+
+  <div class="card-x" th:each="r : ${roles}">
+    <form class="m-0" method="post" th:action="@{/admin/roles}">
+      <input type="hidden" name="id" th:value="${r.id}">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <h2 class="m-0" th:text="${r.name}">نقش</h2>
+        <span class="st st-info" th:if="${r.systemRole}">پیش‌فرض سیستم</span>
+        <span class="st st-secondary"><span th:text="${counts.get(r.id)}">0</span> کاربر</span>
+      </div>
+      <div class="row g-2">
+        <div class="col-md-4"><label class="form-label small text-secondary mb-0">نام</label><input class="form-control form-control-sm" name="name" th:value="${r.name}" required maxlength="100"></div>
+        <div class="col-md-8"><label class="form-label small text-secondary mb-0">توضیح</label><input class="form-control form-control-sm" name="description" th:value="${r.description}" maxlength="300"></div>
+        <div class="col-md-6 col-xl-4" th:each="p : ${permissions}"><div class="form-check">
+          <input class="form-check-input" type="checkbox" name="perm" th:value="${p}" th:id="'rp'+${r.id}+${p}" th:checked="${r.permissions.contains(p)}">
+          <label class="form-check-label" th:for="'rp'+${r.id}+${p}"><strong th:text="${p.label}"></strong><span class="d-block text-secondary small" th:text="${p.description}"></span></label></div></div>
+      </div>
+      <button class="btn btn-sm btn-outline-ac mt-2" type="submit">ذخیره‌ی نقش</button>
+    </form>
+    <form class="d-inline" method="post" th:if="${!r.systemRole}" th:action="@{/admin/roles/{id}/delete(id=${r.id})}"
+          onsubmit="return confirm('این نقش حذف شود؟');">
+      <button class="btn btn-sm btn-outline-danger mt-2" type="submit"><i class="bi bi-trash"></i> حذف نقش</button>
+    </form>
+  </div>
+</section>
+</body>
+</html>

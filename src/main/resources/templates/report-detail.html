@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('جزئیات گزارش', ~{::section})}">
+<head><title>جزئیات گزارش</title></head>
+<body>
+<section>
+  <div class="page-head">
+    <div>
+      <h1>گزارش <span th:text="${r.trackingNo}">PG-00001</span></h1>
+      <div class="sub">ثبت‌شده در <span th:text="${@jalali.dt(r.createdAt)}"></span></div>
+    </div>
+    <span class="st fs-6" th:classappend="'st-' + ${r.status.cssClass}" th:text="${r.status.label}"></span>
+    <div class="actions">
+      <a class="btn btn-ac" th:if="${canEdit}" th:href="@{/reports/{id}/edit(id=${r.id})}"><i class="bi bi-pencil"></i> ویرایش</a>
+      <form th:if="${canEdit}" th:action="@{/reports/{id}/submit(id=${r.id})}" method="post" class="m-0">
+        <button class="btn btn-outline-ac" type="submit"><i class="bi bi-send"></i> ارسال</button>
+      </form>
+      <a class="btn btn-outline-ac" sec:authorize="hasAuthority('PERM_EXPORT')" th:href="@{/reports/{id}/export(id=${r.id})}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a>
+      <a class="btn btn-outline-secondary" th:href="@{/reports}">بازگشت</a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card-x">
+        <h2>مشخصات تماس</h2>
+        <dl class="kv m-0">
+          <div><dt>تیم تماس‌گیرنده</dt><dd th:text="${r.callerTeam.name}"></dd></div>
+          <div><dt>تماس‌گیرنده</dt><dd th:text="${r.caller.fullName}"></dd></div>
+          <div><dt>تیم هدف</dt><dd th:text="${r.targetTeam.name}"></dd></div>
+          <div><dt>شخص موردنظر</dt><dd th:text="${r.targetPerson != null} ? ${r.targetPerson} : '—'"></dd></div>
+          <div><dt>روش تماس</dt><dd th:text="${r.contactMethod.label}"></dd></div>
+          <div><dt>زمان تماس</dt><dd th:text="${@jalali.dt(r.contactAt)}"></dd></div>
+          <div><dt>تعداد دفعات تلاش</dt><dd th:text="${r.attemptsCount}"></dd></div>
+          <div><dt>علت عدم پاسخ</dt><dd th:text="${r.reason.title}"></dd></div>
+        </dl>
+        <hr>
+        <dl class="kv m-0">
+          <div style="grid-column:1/-1"><dt>موضوع تماس</dt><dd th:text="${r.subject}"></dd></div>
+          <div style="grid-column:1/-1" th:if="${r.reasonDetail != null}"><dt>توضیحات</dt><dd th:text="${r.reasonDetail}" style="white-space:pre-line"></dd></div>
+        </dl>
+      </div>
+
+      <form class="card-x" method="post" th:if="${canDecide}" th:action="@{/reports/{id}/approve(id=${r.id})}">
+        <h2>تصمیم مدیر تیم</h2>
+        <label class="form-label" for="note">توضیح (برای برگشت یا رد الزامی است)</label>
+        <textarea class="form-control mb-3" id="note" name="note" rows="3" maxlength="2000"></textarea>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-ac" type="submit" th:formaction="@{/reports/{id}/approve(id=${r.id})}"><i class="bi bi-check2-circle"></i> تأیید و ارسال برای مدیریت ارشد</button>
+          <button class="btn btn-outline-warning" type="submit" th:formaction="@{/reports/{id}/return(id=${r.id})}"><i class="bi bi-arrow-return-left"></i> برگشت برای اصلاح</button>
+          <button class="btn btn-outline-danger" type="submit" th:formaction="@{/reports/{id}/reject(id=${r.id})}"><i class="bi bi-x-circle"></i> رد گزارش</button>
+        </div>
+      </form>
+
+      <form class="card-x" method="post" th:if="${canReview or canClose}" th:action="@{/reports/{id}/review(id=${r.id})}">
+        <h2>اقدام مدیریت</h2>
+        <label class="form-label" for="note2">یادداشت (اختیاری)</label>
+        <textarea class="form-control mb-3" id="note2" name="note" rows="3" maxlength="2000"></textarea>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-ac" type="submit" th:if="${canReview}" th:formaction="@{/reports/{id}/review(id=${r.id})}"><i class="bi bi-eye"></i> شروع بررسی</button>
+          <button class="btn btn-ac" type="submit" th:if="${canClose}" th:formaction="@{/reports/{id}/close(id=${r.id})}"><i class="bi bi-check-all"></i> بستن گزارش</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card-x">
+        <h2>تاریخچه‌ی کامل</h2>
+        <ul class="timeline">
+          <li th:each="e : ${timeline}">
+            <span class="dot"><i class="bi bi-circle-fill" style="font-size:.5rem"></i></span>
+            <div><strong th:text="${e.eventType.label}"></strong>
+              <span class="st ms-1" th:if="${e.toStatus != null}" th:classappend="'st-' + ${e.toStatus.cssClass}" th:text="${e.toStatus.label}"></span></div>
+            <div class="meta"><span th:text="${e.actor.fullName}"></span> (<span th:text="${e.actor.team.name}"></span>) · <span th:text="${@jalali.dt(e.createdAt)}"></span></div>
+            <div class="note" th:if="${e.noteText != null}" th:text="${e.noteText}"></div>
+            <div class="note" th:if="${e.changesText != null}" th:text="${e.changesText}"></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

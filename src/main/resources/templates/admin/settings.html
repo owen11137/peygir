@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('تنظیمات', ~{::section})}">
+<head><title>تنظیمات</title></head>
+<body>
+<section>
+  <div class="page-head"><div><h1>تنظیمات</h1><div class="sub">تنظیمات سراسری برنامه.</div></div></div>
+  <form class="card-x" method="post" th:action="@{/admin/settings}" style="max-width:640px">
+    <h2>داشبورد</h2>
+    <label class="form-label req" for="refreshSeconds">فاصله‌ی به‌روزرسانی خودکار داشبورد (ثانیه)</label>
+    <input class="form-control ltr" style="max-width:200px" id="refreshSeconds" name="refreshSeconds" type="number"
+           th:min="${refreshMin}" th:max="${refreshMax}" th:value="${refreshSeconds}" required>
+    <div class="text-secondary small mt-2">پیش‌فرض ۶۰ ثانیه (هر یک دقیقه). بین <span th:text="${refreshMin}"></span> تا <span th:text="${refreshMax}"></span> ثانیه.
+      هر کاربر داخل خود داشبورد هم می‌تواند برای خودش مقدار دیگری انتخاب کند یا به‌روزرسانی خودکار را خاموش کند.</div>
+    <button class="btn btn-ac mt-3" type="submit">ذخیره</button>
+  </form>
+</section>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('ثبت گزارش', ~{::section})}">
+<head><title>ثبت گزارش</title></head>
+<body>
+<section>
+  <div class="page-head">
+    <div>
+      <h1 th:text="${editing == null} ? 'ثبت گزارش جدید' : 'ویرایش گزارش ' + ${editing.trackingNo}">ثبت گزارش جدید</h1>
+      <div class="sub">تماس‌گیرنده: <strong th:text="${me.fullName}"></strong> · تیم <strong th:text="${me.teamName}"></strong></div>
+    </div>
+  </div>
+
+  <form class="card-x" method="post" th:object="${form}"
+        th:action="${editing == null} ? @{/reports} : @{/reports/{id}(id=${editing.id})}">
+    <div class="flash err" th:if="${#fields.hasAnyErrors()}">
+      <i class="bi bi-exclamation-octagon"></i>
+      <ul class="m-0 ps-3"><li th:each="e : ${#fields.allErrors()}" th:text="${e}"></li></ul>
+    </div>
+    <div class="flash err" th:if="${#lists.isEmpty(userGroups)}"><i class="bi bi-exclamation-triangle"></i>
+      <span>هیچ تیم دیگری با عضو فعال وجود ندارد؛ از ادمین بخواهید تیم‌ها و کاربران را تعریف کند.</span></div>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label req" for="targetTeamId">تیمی که پاسخ نداده</label>
+        <select class="form-select" id="targetTeamId" th:field="*{targetTeamId}" th:errorclass="is-invalid" required>
+          <option value="">انتخاب کنید…</option>
+          <option th:each="g : ${userGroups}" th:value="${g.teamId}" th:text="${g.teamName}"></option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label req" for="targetUserId">شخصی که پاسخ نداده</label>
+        <select class="form-select" id="targetUserId" th:field="*{targetUserId}" th:errorclass="is-invalid" required>
+          <option value="">انتخاب کنید…</option>
+          <optgroup th:each="g : ${userGroups}" th:label="${g.teamName}">
+            <option th:each="u : ${g.users}" th:value="${u.id}" th:attr="data-team=${g.teamId}"
+                    th:text="${u.fullName + ' — ' + u.roleNames}"></option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label req" for="contactMethod">روش تماس</label>
+        <select class="form-select" id="contactMethod" th:field="*{contactMethod}" th:errorclass="is-invalid">
+          <option th:each="m : ${methods}" th:value="${m}" th:text="${m.label}"></option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label req" for="contactAt">زمان تماس (شمسی)</label>
+        <input class="form-control ltr" id="contactAt" th:field="*{contactAt}" th:errorclass="is-invalid" placeholder="1405/07/12 14:30">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label req" for="attemptsCount">تعداد دفعات تلاش</label>
+        <input class="form-control" id="attemptsCount" type="number" min="1" max="99" th:field="*{attemptsCount}" th:errorclass="is-invalid">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label req" for="subject">موضوع تماس</label>
+        <input class="form-control" id="subject" th:field="*{subject}" th:errorclass="is-invalid" maxlength="300">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label req" for="reasonId">علت عدم پاسخگویی</label>
+        <select class="form-select" id="reasonId" th:field="*{reasonId}" th:errorclass="is-invalid">
+          <option value="">انتخاب کنید…</option>
+          <option th:each="x : ${reasons}" th:value="${x.id}" th:text="${x.title}" th:attr="data-requires=${x.requiresDetail}"></option>
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label" id="detailLabel" for="reasonDetail">توضیحات</label>
+        <textarea class="form-control" id="reasonDetail" rows="4" th:field="*{reasonDetail}" th:errorclass="is-invalid" maxlength="2000"></textarea>
+      </div>
+    </div>
+
+    <hr class="my-4">
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-ac" type="submit" name="action" value="submit">
+        <i class="bi bi-send"></i>
+        <span sec:authorize="hasAuthority('PERM_TEAM_APPROVE')">ثبت و تأیید مستقیم</span>
+        <span sec:authorize="!hasAuthority('PERM_TEAM_APPROVE')">ارسال برای تأیید مدیر تیم</span>
+      </button>
+      <button class="btn btn-outline-secondary" type="submit" name="action" value="draft"><i class="bi bi-save"></i> ذخیره به‌عنوان پیش‌نویس</button>
+      <a class="btn btn-link" th:href="@{/reports}">انصراف</a>
+    </div>
+    <p class="text-secondary small mt-3 mb-0" sec:authorize="hasAuthority('PERM_TEAM_APPROVE')">گزارش شما نیازی به تأیید ندارد و مستقیم برای مدیریت ارشد نمایش داده می‌شود.</p>
+  </form>
+</section>
+</body>
+</html>

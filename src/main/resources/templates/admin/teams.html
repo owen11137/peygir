@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('تیم‌ها', ~{::section})}">
+<head><title>تیم‌ها</title></head>
+<body>
+<section>
+  <div class="page-head"><div><h1>مدیریت تیم‌ها</h1><div class="sub">تیم‌های غیرفعال در فرم ثبت گزارش نمایش داده نمی‌شوند.</div></div>
+    <div class="actions"><a class="btn btn-outline-ac" th:href="@{/admin/teams/export}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a></div></div>
+
+  <form class="card-x" method="post" th:action="@{/admin/teams}">
+    <h2>افزودن تیم</h2>
+    <div class="row g-2">
+      <div class="col-md-6"><input class="form-control" name="name" placeholder="نام تیم" required maxlength="120"></div>
+      <div class="col-auto"><button class="btn btn-ac" type="submit"><i class="bi bi-plus-lg"></i> افزودن</button></div>
+    </div>
+  </form>
+
+  <div class="card-x p-0"><div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>نام تیم</th><th>وضعیت</th><th></th></tr></thead>
+      <tbody>
+      <tr th:each="t : ${teams}">
+        <td>
+          <form class="d-flex gap-2 m-0" method="post" th:action="@{/admin/teams/{id}/rename(id=${t.id})}">
+            <input class="form-control form-control-sm" name="name" th:value="${t.name}" required maxlength="120" style="max-width:280px">
+            <button class="btn btn-sm btn-outline-ac" type="submit">ذخیره‌ی نام</button>
+          </form>
+        </td>
+        <td><span class="st" th:classappend="${t.active} ? 'st-success' : 'st-secondary'" th:text="${t.active} ? 'فعال' : 'غیرفعال'"></span></td>
+        <td>
+          <form class="m-0" method="post" th:action="@{/admin/teams/{id}/toggle(id=${t.id})}">
+            <button class="btn btn-sm btn-outline-secondary" type="submit" th:text="${t.active} ? 'غیرفعال‌کردن' : 'فعال‌کردن'"></button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div></div>
+</section>
+</body>
+</html>
