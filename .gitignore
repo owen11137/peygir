@@ -3,3 +3,7 @@ data/
 *.iml
 .idea/
 .vscode/
+*.p12
+*.pfx
+*.jks
+keystore-password
