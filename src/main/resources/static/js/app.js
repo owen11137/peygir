@@ -24,17 +24,24 @@
     reason.addEventListener('change', sync); sync();
   }
 
-  // همگام‌سازی «تیم هدف» و «شخص»: انتخاب شخص، تیمش را تنظیم می‌کند؛ تغییر تیم، شخصِ تیم دیگر را پاک می‌کند
+  // فهرست اشخاص فقط اعضای تیم انتخاب‌شده را نشان می‌دهد.
   var tteam = document.getElementById('targetTeamId'), tuser = document.getElementById('targetUserId');
   if (tteam && tuser) {
-    tuser.addEventListener('change', function () {
-      var o = tuser.options[tuser.selectedIndex];
-      if (o && o.dataset.team) tteam.value = o.dataset.team;
-    });
-    tteam.addEventListener('change', function () {
-      var o = tuser.options[tuser.selectedIndex];
-      if (o && o.dataset.team && o.dataset.team !== tteam.value) tuser.value = '';
-    });
+    var userOptions = Array.from(tuser.querySelectorAll('option[data-team]'));
+    var placeholder = tuser.querySelector('option[value=""]').cloneNode(true);
+    var syncUsers = function () {
+      var selectedUser = tuser.value;
+      var teamUsers = userOptions.filter(function (o) { return o.dataset.team === tteam.value; });
+      var prompt = placeholder.cloneNode(true);
+      prompt.textContent = !tteam.value ? 'ابتدا تیم را انتخاب کنید…'
+        : teamUsers.length ? 'انتخاب کنید…' : 'عضوی برای این تیم وجود ندارد';
+      tuser.replaceChildren(prompt);
+      teamUsers.forEach(function (o) { tuser.appendChild(o.cloneNode(true)); });
+      tuser.value = teamUsers.some(function (o) { return o.value === selectedUser; }) ? selectedUser : '';
+      tuser.disabled = !tteam.value || teamUsers.length === 0;
+    };
+    tteam.addEventListener('change', syncUsers);
+    syncUsers();
   }
 
   // صفحه‌ی ادمین: با تغییر تیک نقش‌ها، تیک دسترسی‌ها از روی اجتماع دسترسی نقش‌های انتخاب‌شده تنظیم می‌شود
