@@ -8,24 +8,53 @@
   <link rel="stylesheet" th:href="@{/css/bootstrap-icons.min.css}">
   <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body>
-<div class="auth">
-  <form class="auth-card" th:action="@{/login}" method="post">
-    <div class="logo"><i class="bi bi-telephone-x"></i></div>
-    <h1 class="h4 fw-bold mb-1">ورود به پیگیر</h1>
-    <p class="text-secondary small mb-4">سامانه ثبت و پیگیری عدم پاسخگویی تیم‌ها</p>
-    <div class="flash err" th:if="${param.error}"><i class="bi bi-exclamation-octagon"></i><span>نام کاربری یا رمز عبور درست نیست، یا حساب غیرفعال است.</span></div>
-    <div class="flash ok" th:if="${param.logout}"><i class="bi bi-check-circle"></i><span>با موفقیت خارج شدید.</span></div>
-    <div class="mb-3">
-      <label class="form-label" for="username">نام کاربری</label>
-      <input class="form-control ltr" id="username" name="username" autocomplete="username" autofocus required>
+<body class="login-page">
+<main class="login-shell">
+  <section class="login-brand" aria-labelledby="brandHeading">
+    <div class="login-brand-mark"><span class="login-symbol"><i class="bi bi-telephone-x" aria-hidden="true"></i></span><span>پیگیر<small>سامانه پیگیری تیم‌ها</small></span></div>
+    <div class="login-brand-content">
+      <span class="login-eyebrow">همکاری با دید روشن‌تر</span>
+      <h2 id="brandHeading">پیگیری‌ها روشن‌تر،<br><span>همکاری‌ها منظم‌تر.</span></h2>
+      <p>از ثبت اولین گزارش تا بررسی و نتیجه؛ مسیر پیگیری را در کنار تیم‌تان دنبال کنید.</p>
+      <ul class="login-features">
+        <li><i class="bi bi-journal-check" aria-hidden="true"></i><span>ثبت و پیگیری گزارش‌ها</span></li>
+        <li><i class="bi bi-people" aria-hidden="true"></i><span>همکاری و تأیید در تیم‌ها</span></li>
+        <li><i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>نمایی روشن از وضعیت و آمار</span></li>
+      </ul>
     </div>
-    <div class="mb-4">
-      <label class="form-label" for="password">رمز عبور</label>
-      <input class="form-control ltr" id="password" name="password" type="password" autocomplete="current-password" required>
+    <div class="login-brand-footer"><span class="login-dot" aria-hidden="true"></span>هر گزارش، یک مسیر مشخص</div>
+    <div class="login-orbit" aria-hidden="true"></div>
+  </section>
+  <section class="login-panel" aria-labelledby="loginHeading">
+    <div class="login-intro">
+      <span class="login-kicker">خوش آمدید</span>
+      <h1 id="loginHeading">ورود به پیگیر</h1>
+      <p>برای دسترسی به گزارش‌ها، وارد حساب کاربری خود شوید.</p>
     </div>
-    <button class="btn btn-ac w-100 py-2" type="submit">ورود</button>
-  </form>
-</div>
+    <form class="login-form" th:action="@{/login}" method="post">
+      <div class="flash err" role="alert" th:if="${param.error}"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><span>نام کاربری یا رمز عبور درست نیست، یا حساب غیرفعال است.</span></div>
+      <div class="flash ok" role="status" th:if="${param.logout}"><i class="bi bi-check-circle" aria-hidden="true"></i><span>با موفقیت خارج شدید.</span></div>
+      <div class="login-field">
+        <label for="username">نام کاربری</label>
+        <div class="login-input-wrap">
+          <i class="bi bi-person login-input-icon" aria-hidden="true"></i>
+          <input class="form-control ltr" id="username" name="username" placeholder="u120" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus required>
+        </div>
+      </div>
+      <div class="login-field">
+        <label for="password">رمز عبور</label>
+        <div class="login-input-wrap">
+          <i class="bi bi-lock login-input-icon" aria-hidden="true"></i>
+          <input class="form-control ltr" id="password" name="password" type="password" autocomplete="current-password" required>
+          <button class="login-password-toggle" id="passwordToggle" type="button" aria-label="نمایش رمز عبور" aria-controls="password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <button class="login-submit" type="submit"><span>ورود به حساب کاربری</span><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+    </form>
+    <p class="login-help"><i class="bi bi-info-circle" aria-hidden="true"></i>برای دریافت حساب یا بازیابی رمز، با مدیر سیستم تماس بگیرید.</p>
+    <div class="login-panel-footer">پیگیر <span>·</span> ثبت، بررسی، پیگیری</div>
+  </section>
+</main>
+<script th:src="@{/js/login.js}"></script>
 </body>
 </html>
