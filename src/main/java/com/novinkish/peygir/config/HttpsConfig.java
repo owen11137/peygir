@@ -10,15 +10,15 @@ import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** HTTP فقط به HTTPS هدایت می‌شود؛ صفحات و فرم‌ها از اتصال امن ارائه می‌شوند. */
+/** HTTPS only by default; an explicitly enabled HTTP connector can redirect to HTTPS. */
 @Configuration
 @ConditionalOnProperty(name = "server.ssl.enabled", havingValue = "true")
 public class HttpsConfig {
     @Bean
     WebServerFactoryCustomizer<TomcatServletWebServerFactory> httpsRedirect(
             @Value("${server.port}") int httpsPort,
-            @Value("${peygir.http-port:8080}") int httpPort,
-            @Value("${server.address:127.0.0.1}") String address) {
+            @Value("${peygir.http-port:-1}") int httpPort,
+            @Value("${server.address:0.0.0.0}") String address) {
         if (httpsPort < 1 || httpsPort > 65535)
             throw new IllegalArgumentException("HTTPS port must be between 1 and 65535");
         if (httpPort == httpsPort || httpPort > 65535 || httpPort == 0 || httpPort < -1)

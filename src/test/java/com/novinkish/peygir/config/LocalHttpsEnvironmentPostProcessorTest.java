@@ -9,6 +9,7 @@ import org.springframework.core.env.StandardEnvironment;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,6 +49,12 @@ class LocalHttpsEnvironmentPostProcessorTest {
         var subjectAlternativeNames = certificate.getSubjectAlternativeNames();
         assertTrue(subjectAlternativeNames.stream().anyMatch(name -> name.equals(List.of(2, "localhost"))));
         assertTrue(subjectAlternativeNames.stream().anyMatch(name -> name.equals(List.of(7, "127.0.0.1"))));
+        for (String entry : LocalHttpsEnvironmentPostProcessor.subjectAlternativeNames().split(",")) {
+            if (!entry.startsWith("ip:")) continue;
+            String ip = InetAddress.getByName(entry.substring(3)).getHostAddress();
+            assertTrue(subjectAlternativeNames.stream().anyMatch(name -> name.equals(List.of(7, ip))),
+                    "Certificate must cover the interface address " + ip);
+        }
         try (InputStream input = Files.newInputStream(directory.resolve("localhost.crt"))) {
             var exportedCertificate = CertificateFactory.getInstance("X.509").generateCertificate(input);
             assertEquals(certificate, exportedCertificate);

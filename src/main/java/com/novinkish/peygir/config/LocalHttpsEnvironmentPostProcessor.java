@@ -9,6 +9,8 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,10 +24,12 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-/** Creates installation-specific localhost TLS material before the web server starts. */
+/** Creates installation-specific localhost and LAN TLS material before the web server starts. */
 public class LocalHttpsEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
     private static final String PASSWORD_ENV = "PEYGIR_LOCAL_TLS_PASSWORD";
@@ -120,7 +124,7 @@ public class LocalHttpsEnvironmentPostProcessor implements EnvironmentPostProces
                     keytool.toString(), "-genkeypair", "-noprompt", "-alias", alias,
                     "-keyalg", "RSA", "-keysize", "3072", "-sigalg", "SHA256withRSA",
                     "-validity", "365", "-dname", "CN=localhost, OU=Peygir Local, O=Peygir",
-                    "-ext", "SAN=dns:localhost,ip:127.0.0.1", "-ext", "EKU=serverAuth",
+                    "-ext", "SAN=" + subjectAlternativeNames(), "-ext", "EKU=serverAuth",
                     "-ext", "BC=ca:false", "-storetype", "PKCS12", "-keystore", temporaryStore.toString(),
                     "-storepass:env", PASSWORD_ENV, "-keypass:env", PASSWORD_ENV);
             builder.environment().put(PASSWORD_ENV, password);
@@ -153,6 +157,27 @@ public class LocalHttpsEnvironmentPostProcessor implements EnvironmentPostProces
             Files.deleteIfExists(temporaryPassword);
             Files.deleteIfExists(temporaryDirectory);
         }
+    }
+
+    /** Include IPs of active interfaces when creating a new certificate; never rotate existing keys. */
+    static String subjectAlternativeNames() throws SocketException {
+        var names = new LinkedHashSet<String>();
+        names.add("dns:localhost");
+        names.add("ip:127.0.0.1");
+        names.add("ip:::1");
+        var interfaces = NetworkInterface.getNetworkInterfaces();
+        if (interfaces != null) {
+            for (var network : Collections.list(interfaces)) {
+                if (!network.isUp() || network.isLoopback()) continue;
+                for (var address : Collections.list(network.getInetAddresses())) {
+                    if (address.isLoopbackAddress() || address.isAnyLocalAddress()
+                            || address.isMulticastAddress() || address.isLinkLocalAddress()) continue;
+                    // Certificate IP entries do not carry IPv6 scope identifiers.
+                    names.add("ip:" + address.getHostAddress().split("%", 2)[0]);
+                }
+            }
+        }
+        return String.join(",", names);
     }
 
     private static X509Certificate loadCertificate(Path storePath, String password, String alias) throws Exception {
