@@ -35,7 +35,7 @@
         <label class="form-label">تیم تماس‌گیرنده</label>
         <select class="form-select" name="callerTeamId">
           <option value="">همه</option>
-          <option th:each="t : ${teams}" th:value="${t.id}" th:text="${t.name}" th:selected="${filter.callerTeamId == t.id}"></option>
+          <option th:each="t : ${callerTeams}" th:value="${t.id}" th:text="${t.name}" th:selected="${filter.callerTeamId == t.id}"></option>
         </select>
       </div>
       <div class="col-6 col-md-3 col-xl-2">

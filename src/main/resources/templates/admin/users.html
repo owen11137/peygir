@@ -34,6 +34,13 @@
               <div class="form-check" th:each="r : ${roles}"><input class="form-check-input" type="checkbox" name="roleId" th:value="${r.id}" th:id="'nr'+${r.id}"><label class="form-check-label" th:for="'nr'+${r.id}" th:text="${r.name}"></label></div>
             </div></div>
         </div>
+        <details class="mt-3">
+          <summary class="fw-bold">تیم‌های تحت نظارت (فقط مشاهده و آمار)</summary>
+          <p class="small text-secondary mt-2">تیم اصلی و تیم‌های انتخاب‌شده قابل مشاهده‌اند؛ پیش‌نویس دیگران پنهان می‌ماند. این انتخاب اجازهٔ تأیید، رد، برگشت یا بستن گزارش تیم‌های دیگر نمی‌دهد و مشاهدهٔ سراسری را به همین تیم‌ها محدود می‌کند.</p>
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check" th:each="t : ${teams}"><input class="form-check-input" type="checkbox" name="supervisedTeamId" th:value="${t.id}" th:id="'newSupervised'+${t.id}"><label class="form-check-label" th:for="'newSupervised'+${t.id}" th:text="${t.name}"></label></div>
+          </div>
+        </details>
         <div class="form-check mt-3"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" id="newUserChangePassword"><label class="form-check-label" for="newUserChangePassword">تغییر رمز در ورود بعدی الزامی باشد</label></div>
         <button class="btn btn-ac mt-3" type="submit"><i class="bi bi-person-plus"></i> ساخت کاربر</button>
         <div class="text-secondary small mt-2">بعد از ساخت، دسترسی‌های جداگانه‌ی او را از فهرست پایین تنظیم کنید.</div>
@@ -93,6 +100,7 @@
           <strong th:text="${u.fullName}"></strong>
           <span class="small text-secondary ltr" th:text="${u.username}"></span>
           <span class="small text-secondary" th:text="${u.roleNames}"></span>
+          <span class="st st-primary" th:if="${!u.supervisedTeams.empty}">ناظر چند تیم</span>
           <span class="st st-warning" th:if="${u.mustChangePassword}">تغییر رمز الزامی</span>
           <span class="st" th:classappend="${u.active} ? 'st-success' : 'st-secondary'"
                 th:text="${u.active} ? 'فعال' : 'غیرفعال'"></span>
@@ -118,6 +126,13 @@
           <div class="col-6 col-md-auto"><button class="btn btn-sm btn-outline-ac" type="submit">ذخیره</button></div>
           <div class="col-auto" th:if="${u.hasCustomPermissions()}"><span class="st st-warning">دسترسی سفارشی</span></div>
         </div>
+        <details class="mt-2">
+          <summary class="fw-bold">تیم‌های تحت نظارت (فقط مشاهده و آمار)</summary>
+          <p class="small text-secondary mt-2">تیم اصلی و تیم‌های انتخاب‌شده قابل مشاهده‌اند؛ پیش‌نویس دیگران پنهان می‌ماند. این انتخاب اجازهٔ تأیید، رد، برگشت یا بستن گزارش تیم‌های دیگر نمی‌دهد و مشاهدهٔ سراسری را به همین تیم‌ها محدود می‌کند.</p>
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check" th:each="t : ${teams}"><input class="form-check-input" type="checkbox" name="supervisedTeamId" th:value="${t.id}" th:checked="${u.supervises(t)}" th:id="'supervised'+${u.id}+'_'+${t.id}"><label class="form-check-label" th:for="'supervised'+${u.id}+'_'+${t.id}" th:text="${t.name}"></label></div>
+          </div>
+        </details>
         <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" th:id="'changePassword'+${u.id}" th:checked="${u.mustChangePassword}"><label class="form-check-label" th:for="'changePassword'+${u.id}">تغییر رمز در ورود بعدی الزامی باشد</label></div>
         <div class="small text-secondary mt-1">اگر تیک خاموش باشد، کاربر بدون اجبار به تغییر رمز وارد می‌شود.</div>
         <details class="mt-2">

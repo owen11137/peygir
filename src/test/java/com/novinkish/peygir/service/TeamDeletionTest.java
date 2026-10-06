@@ -89,7 +89,7 @@ class TeamDeletionTest {
     void requiresMovingMembersIncludingInactiveMembers(boolean active) {
         Team team = team();
         String username = "user-" + UUID.randomUUID();
-        admin.createUser(username, "Team member", team.getId(), List.of(), "Test@123", false);
+        admin.createUser(username, "Team member", team.getId(), List.of(), "Test@123", false, List.of());
         AppUser user = users.findByUsername(username).orElseThrow();
         user.setActive(active);
         users.saveAndFlush(user);
@@ -100,6 +100,18 @@ class TeamDeletionTest {
         admin.deleteTeam(team.getId());
         assertFalse(teams.existsById(team.getId()));
         assertTrue(users.existsById(user.getId()));
+    }
+
+    @Test
+    void deletingUnusedSupervisedTeamPreservesObserverAccount() {
+        Team supervised = team();
+        Team primary = users.findByUsername("admin").orElseThrow().getTeam();
+        String username = "observer-" + UUID.randomUUID();
+        admin.createUser(username, "Observer", primary.getId(), List.of(), "Test@123", false, List.of(supervised.getId()));
+        admin.deleteTeam(supervised.getId());
+        AppUser observer = users.findByUsername(username).orElseThrow();
+        assertEquals(primary.getId(), observer.getTeam().getId());
+        assertTrue(observer.getSupervisedTeams().isEmpty());
     }
 
     @Test

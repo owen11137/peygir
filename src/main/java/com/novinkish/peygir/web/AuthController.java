@@ -25,6 +25,7 @@ public class AuthController {
 
     @GetMapping("/")
     public String home(@AuthenticationPrincipal PeygirUser u) {
+        if (u.hasSupervisedTeams()) return "redirect:/dashboard";
         if (u.has(Permission.REPORT_CREATE) || u.has(Permission.TEAM_APPROVE)) return "redirect:/reports";
         if (u.has(Permission.VIEW_ALL) || u.has(Permission.TEAM_STATS)) return "redirect:/dashboard";
         if (u.has(Permission.ADMIN_PANEL)) return "redirect:/admin/users";

@@ -50,7 +50,7 @@ public class DashboardController {
                                          @RequestParam(required = false) String preset,
                                          @RequestParam(required = false) String from,
                                          @RequestParam(required = false) String to) throws Exception {
-        if (!u.seesAll() && !u.has(Permission.TEAM_STATS)) throw new AccessDeniedException("dashboard");
+        if (!u.seesAll() && !u.has(Permission.TEAM_STATS) && !u.hasSupervisedTeams()) throw new AccessDeniedException("dashboard");
         StatsService.Range range = stats.resolve(u, preset, from, to);
         byte[] data = excel.exportDashboard(stats.dashboard(u, range), stats.reports(u, range));
         String name = "peygir-dashboard-" + range.fromJ().replace("/", "-") + "_" + range.toJ().replace("/", "-") + ".xlsx";

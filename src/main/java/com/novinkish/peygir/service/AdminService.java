@@ -88,7 +88,7 @@ public class AdminService {
     }
 
     @Transactional
-    public void createUser(String username, String fullName, Long teamId, Collection<Long> roleIds, String password, boolean mustChangePassword) {
+    public void createUser(String username, String fullName, Long teamId, Collection<Long> roleIds, String password, boolean mustChangePassword, Collection<Long> supervisedTeamIds) {
         username = required(username, "نام کاربری را وارد کنید").toLowerCase();
         fullName = required(fullName, "نام و نام خانوادگی را وارد کنید");
         if (users.existsByUsername(username)) throw new BusinessException("این نام کاربری قبلاً ثبت شده است");
@@ -98,6 +98,7 @@ public class AdminService {
         u.setFullName(fullName);
         u.setTeam(teams.findById(teamId).orElseThrow(() -> new BusinessException("تیم را انتخاب کنید")));
         u.getRoles().addAll(resolveRoles(roleIds));
+        u.getSupervisedTeams().addAll(resolveSupervisedTeams(supervisedTeamIds));
         u.setPasswordHash(encoder.encode(password));
         u.setMustChangePassword(mustChangePassword);
         users.save(u);
@@ -110,7 +111,7 @@ public class AdminService {
      */
     @Transactional
     public void updateUser(Long actorId, Long id, String fullName, Long teamId, Collection<Long> roleIds,
-                           boolean active, Collection<Permission> effective, boolean mustChangePassword) {
+                           boolean active, Collection<Permission> effective, boolean mustChangePassword, Collection<Long> supervisedTeamIds) {
         AppUser u = users.findById(id).orElseThrow();
         Set<AppRole> newRoles = resolveRoles(roleIds);
         Set<Permission> base = EnumSet.noneOf(Permission.class);
@@ -123,6 +124,8 @@ public class AdminService {
         u.setFullName(required(fullName, "نام را وارد کنید"));
         u.setTeam(teams.findById(teamId).orElseThrow(() -> new BusinessException("تیم را انتخاب کنید")));
         u.setActive(active);
+        u.getSupervisedTeams().clear();
+        u.getSupervisedTeams().addAll(resolveSupervisedTeams(supervisedTeamIds));
         u.setMustChangePassword(mustChangePassword);
         u.getRoles().clear();
         u.getRoles().addAll(newRoles);
@@ -273,6 +276,14 @@ public class AdminService {
 
     private static String norm(String s) {
         return s.replace('ي', 'ی').replace('ك', 'ک').replace('\u200c', ' ').trim().replaceAll("\\s+", " ").toLowerCase();
+    }
+
+    private Set<Team> resolveSupervisedTeams(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) return Set.of();
+        Set<Long> unique = new HashSet<>(ids);
+        Set<Team> selected = new HashSet<>(teams.findAllById(unique));
+        if (selected.size() != unique.size()) throw new BusinessException("یکی از تیم‌های تحت نظارت وجود ندارد؛ صفحه را تازه کنید");
+        return selected;
     }
 
     private Set<AppRole> resolveRoles(Collection<Long> ids) {

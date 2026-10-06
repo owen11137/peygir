@@ -37,13 +37,13 @@ public class ReportService {
 
     /** گزارش‌هایی که این کاربر مجاز به دیدنشان است. */
     public Specification<Report> visible(PeygirUser u) {
-        if (u.has(Permission.VIEW_EVERYTHING)) return (root, q, cb) -> cb.conjunction();
-        // گزارش‌های تیم خودش (پیش‌نویس همکاران پنهان است)
+        if (!u.hasSupervisedTeams() && u.has(Permission.VIEW_EVERYTHING)) return (root, q, cb) -> cb.conjunction();
+        // تیم اصلی و تیم‌های تحت نظارت؛ پیش‌نویس دیگران پنهان است.
         Specification<Report> team = (root, q, cb) -> cb.and(
-                cb.equal(root.get("callerTeam").get("id"), u.getTeamId()),
+                root.get("callerTeam").get("id").in(u.getVisibleTeamIds()),
                 cb.or(cb.notEqual(root.get("status"), Status.DRAFT),
                       cb.equal(root.get("caller").get("id"), u.getId())));
-        if (u.has(Permission.VIEW_ALL)) {
+        if (u.seesAll()) {
             Specification<Report> validated = (root, q, cb) ->
                     root.get("status").in(Status.APPROVED, Status.IN_REVIEW, Status.CLOSED);
             return team.or(validated);
@@ -52,14 +52,15 @@ public class ReportService {
     }
 
     public boolean canView(PeygirUser u, Report r) {
-        if (u.has(Permission.VIEW_EVERYTHING)) return true;
-        if (u.has(Permission.VIEW_ALL) && r.getStatus().isValidated()) return true;
-        return r.getCallerTeam().getId().equals(u.getTeamId())
+        if (!u.hasSupervisedTeams() && u.has(Permission.VIEW_EVERYTHING)) return true;
+        if (u.seesAll() && r.getStatus().isValidated()) return true;
+        return u.canReadTeam(r.getCallerTeam().getId())
                 && (r.getStatus() != Status.DRAFT || r.getCaller().getId().equals(u.getId()));
     }
 
     public boolean canEdit(PeygirUser u, Report r) {
         return u.has(Permission.REPORT_CREATE) && r.getCaller().getId().equals(u.getId())
+                && (!u.hasSupervisedTeams() || r.getCallerTeam().getId().equals(u.getTeamId()))
                 && (r.getStatus() == Status.DRAFT || r.getStatus() == Status.NEEDS_FIX);
     }
 
@@ -70,11 +71,13 @@ public class ReportService {
     }
 
     public boolean canReview(PeygirUser u, Report r) {
-        return u.has(Permission.REVIEW_CLOSE) && r.getStatus() == Status.APPROVED;
+        return u.has(Permission.REVIEW_CLOSE) && r.getStatus() == Status.APPROVED
+                && (!u.hasSupervisedTeams() || r.getCallerTeam().getId().equals(u.getTeamId()));
     }
 
     public boolean canClose(PeygirUser u, Report r) {
         return u.has(Permission.REVIEW_CLOSE)
+                && (!u.hasSupervisedTeams() || r.getCallerTeam().getId().equals(u.getTeamId()))
                 && (r.getStatus() == Status.APPROVED || r.getStatus() == Status.IN_REVIEW);
     }
 

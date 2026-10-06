@@ -104,7 +104,7 @@ public class StatsService {
         Specification<Report> spec = (root, q, cb) ->
                 root.get("status").in(Status.APPROVED, Status.IN_REVIEW, Status.CLOSED);
         if (!u.seesAll()) {
-            spec = spec.and((root, q, cb) -> cb.equal(root.get("callerTeam").get("id"), u.getTeamId()));
+            spec = spec.and((root, q, cb) -> root.get("callerTeam").get("id").in(u.getVisibleTeamIds()));
         }
         return spec;
     }

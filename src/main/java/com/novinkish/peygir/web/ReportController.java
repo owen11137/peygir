@@ -53,7 +53,7 @@ public class ReportController {
         model.addAttribute("pageTitle", "گزارش‌های من و تیم");
         model.addAttribute("mode", "team");
         model.addAttribute("scope", scope);
-        lookups(model);
+        lookups(model, u);
         return "report-list";
     }
 
@@ -61,9 +61,9 @@ public class ReportController {
     @GetMapping("/reports/all")
     public String allReports(@AuthenticationPrincipal PeygirUser u, @ModelAttribute("filter") ReportFilter filter, Model model) {
         model.addAttribute("reports", service.list(u, filter, false));
-        model.addAttribute("pageTitle", "همه‌ی گزارش‌ها");
+        model.addAttribute("pageTitle", u.hasSupervisedTeams() ? "گزارش‌های تیم‌های تحت نظارت" : "همه‌ی گزارش‌ها");
         model.addAttribute("mode", "all");
-        lookups(model);
+        lookups(model, u);
         return "report-list";
     }
 
@@ -73,7 +73,7 @@ public class ReportController {
         model.addAttribute("pageTitle", "صف تأیید مدیر تیم");
         model.addAttribute("mode", "approvals");
         model.addAttribute("filter", new ReportFilter());
-        lookups(model);
+        lookups(model, u);
         return "report-list";
     }
 
@@ -214,8 +214,11 @@ public class ReportController {
 
     // ---------------------------------------------------------------- کمکی
 
-    private void lookups(Model model) {
-        model.addAttribute("teams", teams.findAllByOrderByName());
+    private void lookups(Model model, PeygirUser u) {
+        var allTeams = teams.findAllByOrderByName();
+        model.addAttribute("teams", allTeams);
+        model.addAttribute("callerTeams", u.hasSupervisedTeams()
+                ? allTeams.stream().filter(t -> u.canReadTeam(t.getId())).toList() : allTeams);
         model.addAttribute("reasons", reasons.findAllByOrderBySortOrder());
     }
 

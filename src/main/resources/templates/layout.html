@@ -23,10 +23,10 @@
       <a class="nav-link" sec:authorize="hasAuthority('PERM_TEAM_APPROVE')" th:classappend="${path == '/approvals'} ? 'active'" th:href="@{/approvals}"><i class="bi bi-check2-square"></i> صف تأیید
         <span class="badge-count" th:if="${pendingCount != null and pendingCount > 0}" th:text="${pendingCount}">0</span></a>
     </nav>
-    <nav class="nav-group" sec:authorize="hasAnyAuthority('PERM_TEAM_STATS','PERM_VIEW_ALL')">
+    <nav class="nav-group" sec:authorize="hasAnyAuthority('PERM_TEAM_STATS','PERM_VIEW_ALL','PERM_TEAM_OVERVIEW')">
       <div class="nav-title">مدیریت</div>
       <a class="nav-link" th:classappend="${path == '/dashboard'} ? 'active'" th:href="@{/dashboard}"><i class="bi bi-speedometer2"></i> داشبورد</a>
-      <a class="nav-link" sec:authorize="hasAuthority('PERM_VIEW_ALL')" th:classappend="${path == '/reports/all'} ? 'active'" th:href="@{/reports/all}"><i class="bi bi-list-ul"></i> همه‌ی گزارش‌ها</a>
+      <a class="nav-link" sec:authorize="hasAnyAuthority('PERM_VIEW_ALL','PERM_TEAM_OVERVIEW')" th:classappend="${path == '/reports/all'} ? 'active'" th:href="@{/reports/all}"><i class="bi bi-list-ul"></i> <span th:text="${me.hasSupervisedTeams()} ? 'گزارش‌های تیم‌های تحت نظارت' : 'همه‌ی گزارش‌ها'">همه‌ی گزارش‌ها</span></a>
     </nav>
     <nav class="nav-group" sec:authorize="hasAuthority('PERM_ADMIN_PANEL')">
       <div class="nav-title">مدیریت سیستم</div>

@@ -109,9 +109,10 @@ public class AdminController {
     @PostMapping("/users")
     public String addUser(@RequestParam String username, @RequestParam String fullName, @RequestParam Long teamId,
                           @RequestParam(name = "roleId", required = false) List<Long> roleIds,
+                          @RequestParam(name = "supervisedTeamId", required = false) List<Long> supervisedTeamIds,
                           @RequestParam String password,
                           @RequestParam(defaultValue = "false") boolean mustChangePassword, RedirectAttributes ra) {
-        admin.createUser(username, fullName, teamId, roleIds, password, mustChangePassword);
+        admin.createUser(username, fullName, teamId, roleIds, password, mustChangePassword, supervisedTeamIds);
         ra.addFlashAttribute("success", mustChangePassword ? "کاربر ساخته شد؛ در ورود بعدی باید رمز را عوض کند" : "کاربر ساخته شد");
         return "redirect:/admin/users";
     }
@@ -120,13 +121,14 @@ public class AdminController {
     public String updateUser(@AuthenticationPrincipal PeygirUser me, @PathVariable Long id, @RequestParam String fullName,
                              @RequestParam Long teamId,
                              @RequestParam(name = "roleId", required = false) List<Long> roleIds,
+                             @RequestParam(name = "supervisedTeamId", required = false) List<Long> supervisedTeamIds,
                              @RequestParam(defaultValue = "false") boolean active,
                              @RequestParam(defaultValue = "false") boolean mustChangePassword,
                              @RequestParam(name = "perm", required = false) List<Permission> perms,
                              @RequestParam(defaultValue = "") String search,
                              @RequestParam(required = false) Long filterTeamId,
                              @RequestParam(defaultValue = "0") int page, RedirectAttributes ra) {
-        admin.updateUser(me.getId(), id, fullName, teamId, roleIds, active, perms, mustChangePassword);
+        admin.updateUser(me.getId(), id, fullName, teamId, roleIds, active, perms, mustChangePassword, supervisedTeamIds);
         ra.addFlashAttribute("success", "اطلاعات و تنظیمات کاربر ذخیره شد");
         return usersRedirect(search, filterTeamId, page, ra);
     }
@@ -173,9 +175,10 @@ public class AdminController {
         for (AppUser u : users.findAllByOrderByFullName())
             rows.add(new Object[]{u.getFullName(), u.getUsername(), u.getTeam().getName(), u.getRoleNames(),
                     yesNo(u.isActive(), "فعال", "غیرفعال"), permLabels(u.effectivePermissions()),
-                    yesNo(u.hasCustomPermissions(), "بله", "خیر")});
+                    yesNo(u.hasCustomPermissions(), "بله", "خیر"),
+                    u.getSupervisedTeams().stream().map(Team::getName).sorted().collect(Collectors.joining("، "))});
         return Xlsx.ok("peygir-users.xlsx", excel.table("کاربران",
-                new String[]{"نام", "نام کاربری", "تیم", "نقش‌ها", "وضعیت", "دسترسی‌های نهایی", "دسترسی سفارشی"}, rows));
+                new String[]{"نام", "نام کاربری", "تیم", "نقش‌ها", "وضعیت", "دسترسی‌های نهایی", "دسترسی سفارشی", "تیم‌های تحت نظارت"}, rows));
     }
 
     // ---------------------------------------------------------------- نقش‌ها

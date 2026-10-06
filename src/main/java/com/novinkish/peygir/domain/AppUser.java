@@ -31,6 +31,17 @@ public class AppUser {
     @JoinColumn(name = "team_id")
     private Team team;
 
+    /** Additional teams whose reports and statistics this user may only read. */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_team_view",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "team_id"))
+    private Set<Team> supervisedTeams = new HashSet<>();
+
+    public boolean supervises(Team team) {
+        return supervisedTeams.stream().anyMatch(t -> t.getId().equals(team.getId()));
+    }
+
     /** نقش‌های کاربر (هر کاربر می‌تواند چند نقش داشته باشد). */
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_role",

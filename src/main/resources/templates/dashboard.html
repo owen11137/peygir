@@ -6,14 +6,15 @@
 <section>
   <div class="page-head">
     <div>
-      <h1><span sec:authorize="hasAuthority('PERM_VIEW_ALL')">داشبورد مدیریت</span><span sec:authorize="!hasAuthority('PERM_VIEW_ALL')">آمار تیم</span></h1>
+      <h1 th:text="${me.hasSupervisedTeams() ? 'آمار تیم‌های تحت نظارت' : (me.seesAll() ? 'داشبورد مدیریت' : 'آمار تیم')}">آمار تیم</h1>
+      <div class="small text-secondary" th:if="${me.hasSupervisedTeams()}">تیم اصلی: <span th:text="${me.teamName}"></span>؛ تحت نظارت: <span th:text="${me.supervisedTeamNames}"></span> — فقط مشاهده و آمار</div>
       <div class="sub">فقط گزارش‌های تأییدشده به بعد · <span class="live">زنده</span> · آخرین به‌روزرسانی: <span id="updatedAt">—</span></div>
     </div>
     <div class="actions">
       <select class="form-select form-select-sm" id="refreshSel" title="فاصله‌ی به‌روزرسانی خودکار" style="width:auto"></select>
       <button class="icon-btn" id="btnReload" type="button" title="به‌روزرسانی همین حالا"><i class="bi bi-arrow-clockwise"></i></button>
       <a class="btn btn-outline-ac" id="btnExport" sec:authorize="hasAuthority('PERM_EXPORT')" th:href="@{/dashboard/export}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a>
-      <a class="btn btn-ac" id="btnAll" sec:authorize="hasAuthority('PERM_VIEW_ALL')" th:href="@{/reports/all}"><i class="bi bi-list-ul"></i> فهرست گزارش‌های بازه</a>
+      <a class="btn btn-ac" id="btnAll" sec:authorize="hasAnyAuthority('PERM_VIEW_ALL','PERM_TEAM_OVERVIEW')" th:href="@{/reports/all}"><i class="bi bi-list-ul"></i> فهرست گزارش‌های بازه</a>
     </div>
   </div>
 
