@@ -15,7 +15,7 @@ import java.util.*;
 
 /**
  * در اولین اجرا (وقتی هیچ کاربری وجود ندارد):
- *  - حساب ادمین پیش‌فرض را می‌سازد (admin / Admin@123؛ در اولین ورود باید رمز را عوض کند)
+ *  - حساب ادمین پیش‌فرض را می‌سازد (admin / Admin@123)
  *  - اگر peygir.seed-demo=true باشد، تیم‌ها، کاربران و گزارش‌های نمونه‌ی دمو را هم می‌سازد.
  */
 @Slf4j
@@ -41,8 +41,8 @@ public class DataSeeder implements CommandLineRunner {
 
         Team mgmt = teams.save(new Team("مدیریت"));
         AppRole rUser = role("USER"), rManager = role("TEAM_MANAGER"), rSenior = role("SENIOR_MANAGER"), rAdmin = role("ADMIN");
-        AppUser admin = user("admin", "مدیر سیستم", mgmt, rAdmin, "Admin@123", true);
-        log.info("Default admin created: admin / Admin@123 (must change on first login)");
+        AppUser admin = user("admin", "مدیر سیستم", mgmt, rAdmin, "Admin@123", false);
+        log.info("Default admin created: admin / Admin@123");
         if (!seedDemo) return;
 
         user("ceo", "مدیرعامل (نمونه)", mgmt, rSenior, DEMO_PASSWORD, false);

@@ -74,7 +74,7 @@ public class AdminService {
     }
 
     @Transactional
-    public void createUser(String username, String fullName, Long teamId, Collection<Long> roleIds, String password) {
+    public void createUser(String username, String fullName, Long teamId, Collection<Long> roleIds, String password, boolean mustChangePassword) {
         username = required(username, "نام کاربری را وارد کنید").toLowerCase();
         fullName = required(fullName, "نام و نام خانوادگی را وارد کنید");
         if (users.existsByUsername(username)) throw new BusinessException("این نام کاربری قبلاً ثبت شده است");
@@ -85,7 +85,7 @@ public class AdminService {
         u.setTeam(teams.findById(teamId).orElseThrow(() -> new BusinessException("تیم را انتخاب کنید")));
         u.getRoles().addAll(resolveRoles(roleIds));
         u.setPasswordHash(encoder.encode(password));
-        u.setMustChangePassword(true);
+        u.setMustChangePassword(mustChangePassword);
         users.save(u);
     }
 
@@ -96,7 +96,7 @@ public class AdminService {
      */
     @Transactional
     public void updateUser(Long actorId, Long id, String fullName, Long teamId, Collection<Long> roleIds,
-                           boolean active, Collection<Permission> effective) {
+                           boolean active, Collection<Permission> effective, boolean mustChangePassword) {
         AppUser u = users.findById(id).orElseThrow();
         Set<AppRole> newRoles = resolveRoles(roleIds);
         Set<Permission> base = EnumSet.noneOf(Permission.class);
@@ -109,6 +109,7 @@ public class AdminService {
         u.setFullName(required(fullName, "نام را وارد کنید"));
         u.setTeam(teams.findById(teamId).orElseThrow(() -> new BusinessException("تیم را انتخاب کنید")));
         u.setActive(active);
+        u.setMustChangePassword(mustChangePassword);
         u.getRoles().clear();
         u.getRoles().addAll(newRoles);
 
@@ -127,11 +128,11 @@ public class AdminService {
     }
 
     @Transactional
-    public void resetPassword(Long id, String password) {
+    public void resetPassword(Long id, String password, boolean mustChangePassword) {
         checkPassword(password);
         AppUser u = users.findById(id).orElseThrow();
         u.setPasswordHash(encoder.encode(password));
-        u.setMustChangePassword(true);
+        u.setMustChangePassword(mustChangePassword);
     }
 
     // ---------------------------------------------------------------- نقش‌ها
@@ -178,7 +179,7 @@ public class AdminService {
     // ---------------------------------------------------------------- ورود گروهی از Excel
     /** ستون‌ها: تیم | نام | نام‌کاربری | نقش (یک یا چند نقش با ویرگول) | رمز (اختیاری). */
     @Transactional
-    public ImportResult importUsers(InputStream in) throws Exception {
+    public ImportResult importUsers(InputStream in, boolean mustChangePassword) throws Exception {
         List<String> errors = new ArrayList<>();
         int created = 0, skipped = 0;
         Map<String, AppRole> byKey = roleLookup();
@@ -230,7 +231,7 @@ public class AdminService {
                 u.setTeam(t);
                 u.getRoles().addAll(userRoles);
                 u.setPasswordHash(encoder.encode(pass.isEmpty() ? defaultPassword : pass));
-                u.setMustChangePassword(true);
+                u.setMustChangePassword(mustChangePassword);
                 users.save(u);
                 created++;
             }

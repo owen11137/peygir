@@ -34,6 +34,7 @@
               <div class="form-check" th:each="r : ${roles}"><input class="form-check-input" type="checkbox" name="roleId" th:value="${r.id}" th:id="'nr'+${r.id}"><label class="form-check-label" th:for="'nr'+${r.id}" th:text="${r.name}"></label></div>
             </div></div>
         </div>
+        <div class="form-check mt-3"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" id="newUserChangePassword"><label class="form-check-label" for="newUserChangePassword">تغییر رمز در ورود بعدی الزامی باشد</label></div>
         <button class="btn btn-ac mt-3" type="submit"><i class="bi bi-person-plus"></i> ساخت کاربر</button>
         <div class="text-secondary small mt-2">بعد از ساخت، دسترسی‌های جداگانه‌ی او را از فهرست پایین تنظیم کنید.</div>
       </form>
@@ -43,6 +44,7 @@
         <h2>ورود گروهی از Excel</h2>
         <p class="text-secondary small">ستون‌ها: تیم، نام و نام خانوادگی، نام کاربری، نقش (چند نقش با ویرگول)، رمز اولیه (اختیاری). تیم‌های ناموجود ساخته می‌شوند.</p>
         <input class="form-control mb-2" type="file" name="file" accept=".xlsx,.xls" required>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" id="importChangePassword"><label class="form-check-label" for="importChangePassword">تغییر رمز در ورود بعدی برای کاربران این فایل الزامی باشد</label></div>
         <div class="d-flex gap-2">
           <button class="btn btn-ac" type="submit"><i class="bi bi-upload"></i> ورود کاربران</button>
           <a class="btn btn-outline-secondary" th:href="@{/admin/users/template}"><i class="bi bi-download"></i> فایل نمونه</a>
@@ -91,6 +93,7 @@
           <strong th:text="${u.fullName}"></strong>
           <span class="small text-secondary ltr" th:text="${u.username}"></span>
           <span class="small text-secondary" th:text="${u.roleNames}"></span>
+          <span class="st st-warning" th:if="${u.mustChangePassword}">تغییر رمز الزامی</span>
           <span class="st" th:classappend="${u.active} ? 'st-success' : 'st-secondary'"
                 th:text="${u.active} ? 'فعال' : 'غیرفعال'"></span>
         </summary>
@@ -115,6 +118,8 @@
           <div class="col-6 col-md-auto"><button class="btn btn-sm btn-outline-ac" type="submit">ذخیره</button></div>
           <div class="col-auto" th:if="${u.hasCustomPermissions()}"><span class="st st-warning">دسترسی سفارشی</span></div>
         </div>
+        <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" th:id="'changePassword'+${u.id}" th:checked="${u.mustChangePassword}"><label class="form-check-label" th:for="'changePassword'+${u.id}">تغییر رمز در ورود بعدی الزامی باشد</label></div>
+        <div class="small text-secondary mt-1">اگر تیک خاموش باشد، کاربر بدون اجبار به تغییر رمز وارد می‌شود.</div>
         <details class="mt-2">
           <summary class="small text-secondary" style="cursor:pointer">دسترسی‌های این کاربر</summary>
           <div class="row g-2 mt-1">
@@ -128,11 +133,12 @@
           </div>
         </details>
       </form>
-      <form class="d-flex gap-2 mt-2 m-0" method="post" th:action="@{/admin/users/{id}/reset-password(id=${u.id})}">
+      <form class="d-flex flex-wrap align-items-center gap-2 mt-2 m-0" method="post" th:action="@{/admin/users/{id}/reset-password(id=${u.id})}">
         <input type="hidden" name="search" th:value="${filter.search}">
         <input type="hidden" name="filterTeamId" th:value="${filter.teamId}">
         <input type="hidden" name="page" th:value="${userPage.number}">
         <input class="form-control form-control-sm ltr" name="password" placeholder="رمز جدید (حداقل ۶ نویسه)" minlength="6" required autocomplete="new-password" style="max-width:260px">
+        <div class="form-check"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" th:id="'resetChangePassword'+${u.id}"><label class="form-check-label small" th:for="'resetChangePassword'+${u.id}">تغییر رمز در ورود بعدی الزامی باشد</label></div>
         <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-key"></i> بازنشانی رمز</button>
       </form>
       </div>

@@ -93,9 +93,10 @@ public class AdminController {
     @PostMapping("/users")
     public String addUser(@RequestParam String username, @RequestParam String fullName, @RequestParam Long teamId,
                           @RequestParam(name = "roleId", required = false) List<Long> roleIds,
-                          @RequestParam String password, RedirectAttributes ra) {
-        admin.createUser(username, fullName, teamId, roleIds, password);
-        ra.addFlashAttribute("success", "کاربر ساخته شد؛ در اولین ورود باید رمز را عوض کند");
+                          @RequestParam String password,
+                          @RequestParam(defaultValue = "false") boolean mustChangePassword, RedirectAttributes ra) {
+        admin.createUser(username, fullName, teamId, roleIds, password, mustChangePassword);
+        ra.addFlashAttribute("success", mustChangePassword ? "کاربر ساخته شد؛ در ورود بعدی باید رمز را عوض کند" : "کاربر ساخته شد");
         return "redirect:/admin/users";
     }
 
@@ -104,22 +105,24 @@ public class AdminController {
                              @RequestParam Long teamId,
                              @RequestParam(name = "roleId", required = false) List<Long> roleIds,
                              @RequestParam(defaultValue = "false") boolean active,
+                             @RequestParam(defaultValue = "false") boolean mustChangePassword,
                              @RequestParam(name = "perm", required = false) List<Permission> perms,
                              @RequestParam(defaultValue = "") String search,
                              @RequestParam(required = false) Long filterTeamId,
                              @RequestParam(defaultValue = "0") int page, RedirectAttributes ra) {
-        admin.updateUser(me.getId(), id, fullName, teamId, roleIds, active, perms);
-        ra.addFlashAttribute("success", "نقش‌ها و دسترسی‌های کاربر ذخیره شد");
+        admin.updateUser(me.getId(), id, fullName, teamId, roleIds, active, perms, mustChangePassword);
+        ra.addFlashAttribute("success", "اطلاعات و تنظیمات کاربر ذخیره شد");
         return usersRedirect(search, filterTeamId, page, ra);
     }
 
     @PostMapping("/users/{id}/reset-password")
     public String resetPassword(@PathVariable Long id, @RequestParam String password,
+                                @RequestParam(defaultValue = "false") boolean mustChangePassword,
                                 @RequestParam(defaultValue = "") String search,
                                 @RequestParam(required = false) Long filterTeamId,
                                 @RequestParam(defaultValue = "0") int page, RedirectAttributes ra) {
-        admin.resetPassword(id, password);
-        ra.addFlashAttribute("success", "رمز جدید تنظیم شد؛ کاربر در اولین ورود باید آن را عوض کند");
+        admin.resetPassword(id, password, mustChangePassword);
+        ra.addFlashAttribute("success", mustChangePassword ? "رمز جدید تنظیم شد؛ کاربر در ورود بعدی باید آن را عوض کند" : "رمز جدید تنظیم شد");
         return usersRedirect(search, filterTeamId, page, ra);
     }
 
@@ -131,12 +134,13 @@ public class AdminController {
     }
 
     @PostMapping("/users/import")
-    public String importUsers(@RequestParam("file") MultipartFile file, RedirectAttributes ra) throws Exception {
+    public String importUsers(@RequestParam("file") MultipartFile file,
+                              @RequestParam(defaultValue = "false") boolean mustChangePassword, RedirectAttributes ra) throws Exception {
         if (file.isEmpty()) {
             ra.addFlashAttribute("error", "فایل Excel را انتخاب کنید");
             return "redirect:/admin/users";
         }
-        var res = admin.importUsers(file.getInputStream());
+        var res = admin.importUsers(file.getInputStream(), mustChangePassword);
         ra.addFlashAttribute("success", res.created() + " کاربر ساخته شد، " + res.skipped() + " ردیف رد شد");
         if (!res.errors().isEmpty()) ra.addFlashAttribute("importErrors", res.errors());
         return "redirect:/admin/users";
