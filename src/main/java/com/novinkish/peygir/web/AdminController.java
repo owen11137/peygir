@@ -7,6 +7,7 @@ import com.novinkish.peygir.service.AdminService;
 import com.novinkish.peygir.service.ExcelService;
 import com.novinkish.peygir.service.SettingService;
 import com.novinkish.peygir.service.UserFilter;
+import com.novinkish.peygir.service.UserRosterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AdminController {
     private final AdminService admin;
+    private final UserRosterService roster;
     private final ExcelService excel;
     private final SettingService settings;
     private final TeamRepository teams;
@@ -127,10 +129,11 @@ public class AdminController {
                              @RequestParam(name = "perm", required = false) List<Permission> perms,
                              @RequestParam(defaultValue = "") String search,
                              @RequestParam(required = false) Long filterTeamId,
+                             @RequestParam(required = false) Boolean filterActive,
                              @RequestParam(defaultValue = "0") int page, RedirectAttributes ra) {
         admin.updateUser(me.getId(), id, fullName, teamId, roleIds, active, perms, mustChangePassword, supervisedTeamIds);
         ra.addFlashAttribute("success", "اطلاعات و تنظیمات کاربر ذخیره شد");
-        return usersRedirect(search, filterTeamId, page, ra);
+        return usersRedirect(search, filterTeamId, filterActive, page, ra);
     }
 
     @PostMapping("/users/{id}/reset-password")
@@ -138,25 +141,40 @@ public class AdminController {
                                 @RequestParam(defaultValue = "false") boolean mustChangePassword,
                                 @RequestParam(defaultValue = "") String search,
                                 @RequestParam(required = false) Long filterTeamId,
+                             @RequestParam(required = false) Boolean filterActive,
                                 @RequestParam(defaultValue = "0") int page, RedirectAttributes ra) {
         admin.resetPassword(id, password, mustChangePassword);
         ra.addFlashAttribute("success", mustChangePassword ? "رمز جدید تنظیم شد؛ کاربر در ورود بعدی باید آن را عوض کند" : "رمز جدید تنظیم شد");
-        return usersRedirect(search, filterTeamId, page, ra);
+        return usersRedirect(search, filterTeamId, filterActive, page, ra);
     }
 
-    private static String usersRedirect(String search, Long teamId, int page, RedirectAttributes ra) {
+    private static String usersRedirect(String search, Long teamId, Boolean active, int page, RedirectAttributes ra) {
         if (!search.isBlank()) ra.addAttribute("search", search);
         if (teamId != null) ra.addAttribute("teamId", teamId);
+        if (active != null) ra.addAttribute("active", active);
         if (page > 0) ra.addAttribute("page", page);
         return "redirect:/admin/users#usersList";
     }
 
     @PostMapping("/users/import")
-    public String importUsers(@RequestParam("file") MultipartFile file,
+    public String importUsers(@AuthenticationPrincipal PeygirUser me,
+                              @RequestParam("file") MultipartFile file,
+                              @RequestParam(defaultValue = "false") boolean replaceUsers,
                               @RequestParam(defaultValue = "false") boolean mustChangePassword, RedirectAttributes ra) throws Exception {
         if (file.isEmpty()) {
             ra.addFlashAttribute("error", "فایل Excel را انتخاب کنید");
             return "redirect:/admin/users";
+        }
+        if (replaceUsers) {
+            var result = roster.replaceUsers(file.getInputStream(), me.getId(), mustChangePassword);
+            if (!result.errors().isEmpty()) {
+                ra.addFlashAttribute("error", "فهرست جایگزین نشد؛ خطاهای فایل را اصلاح کنید. هیچ کاربری تغییر نکرد");
+                ra.addFlashAttribute("importErrors", result.errors());
+            } else {
+                ra.addFlashAttribute("success", result.created() + " کاربر ساخته شد، " + result.updated()
+                        + " کاربر به‌روزرسانی شد و " + result.deactivated() + " کاربر خارج از فایل غیرفعال شد؛ سوابق و حساب‌های ادمین حفظ شدند");
+            }
+            return result.errors().isEmpty() ? "redirect:/admin/users?active=true" : "redirect:/admin/users";
         }
         var res = admin.importUsers(file.getInputStream(), mustChangePassword);
         ra.addFlashAttribute("success", res.created() + " کاربر ساخته شد، " + res.skipped() + " ردیف رد شد");

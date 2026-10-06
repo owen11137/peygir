@@ -17,12 +17,14 @@ import java.util.Locale;
 public class UserFilter {
     private String search = "";
     private Long teamId;
+    private Boolean active;
 
     public Specification<AppUser> toSpec() {
         String text = search == null ? "" : search.replace('ي', 'ی').replace('ك', 'ک')
                 .replace("\u200c", "").toLowerCase(Locale.ROOT).trim();
         return (root, query, cb) -> {
             List<Predicate> conditions = new ArrayList<>();
+            if (active != null) conditions.add(cb.equal(root.get("active"), active));
             if (teamId != null) conditions.add(cb.equal(root.get("team").get("id"), teamId));
             if (!text.isEmpty()) {
                 Expression<String> name = normalize(cb, root.get("fullName"));

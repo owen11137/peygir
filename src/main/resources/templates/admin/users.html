@@ -13,7 +13,7 @@
 
   <div class="flash err" th:if="${importErrors}">
     <i class="bi bi-exclamation-triangle"></i>
-    <div><strong>ردیف‌های ردشده در ورود گروهی:</strong>
+    <div><strong>موارد بررسی در ورود گروهی:</strong>
       <ul class="m-0 ps-3"><li th:each="e : ${importErrors}" th:text="${e}"></li></ul></div>
   </div>
 
@@ -51,7 +51,9 @@
         <h2>ورود گروهی از Excel</h2>
         <p class="text-secondary small">ستون‌ها: تیم، نام و نام خانوادگی، نام کاربری، نقش (چند نقش با ویرگول)، رمز اولیه (اختیاری). تیم‌های ناموجود ساخته می‌شوند.</p>
         <input class="form-control mb-2" type="file" name="file" accept=".xlsx,.xls" required>
-        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" id="importChangePassword"><label class="form-check-label" for="importChangePassword">تغییر رمز در ورود بعدی برای کاربران این فایل الزامی باشد</label></div>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="replaceUsers" value="true" id="replaceUsers"><label class="form-check-label" for="replaceUsers">جایگزینی فهرست کاربران با حفظ سوابق</label></div>
+        <p class="small text-secondary">در حالت جایگزینی، کاربران فایل ساخته یا به‌روزرسانی می‌شوند و کاربران خارج از فایل غیرفعال می‌شوند؛ حساب‌های ادمین و تاریخچهٔ گزارش‌ها باقی می‌مانند. برای تغییر نام کاربری، ستون «نام کاربری قبلی» را وارد کنید. ستون «تیم‌های تحت نظارت» با جداکنندهٔ | خوانده می‌شود. اگر فایل خطا داشته باشد، جایگزینی انجام نمی‌شود.</p>
+        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" id="importChangePassword"><label class="form-check-label" for="importChangePassword">تغییر رمز در ورود بعدی برای کاربران جدید یا با رمز تازه الزامی باشد</label></div>
         <div class="d-flex gap-2">
           <button class="btn btn-ac" type="submit"><i class="bi bi-upload"></i> ورود کاربران</button>
           <a class="btn btn-outline-secondary" th:href="@{/admin/users/template}"><i class="bi bi-download"></i> فایل نمونه</a>
@@ -64,7 +66,7 @@
   <div class="card-x" id="usersList">
     <h2>فهرست کاربران</h2>
     <form method="get" th:action="@{/admin/users}" th:object="${filter}" class="row g-2 align-items-end mb-3">
-      <div class="col-md-6">
+      <div class="col-md-4">
         <label class="form-label" for="userSearch">جستجوی کاربران</label>
         <input class="form-control" type="search" id="userSearch" th:field="*{search}"
                placeholder="نام، نام کاربری یا نام تیم…">
@@ -74,6 +76,12 @@
         <select class="form-select" id="userTeamFilter" th:field="*{teamId}">
           <option value="">همهٔ تیم‌ها</option>
           <option th:each="t : ${teams}" th:value="${t.id}" th:text="${t.name}"></option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="userActiveFilter">وضعیت</label>
+        <select class="form-select" id="userActiveFilter" th:field="*{active}">
+          <option value="">همه</option><option value="true">فعال</option><option value="false">غیرفعال</option>
         </select>
       </div>
       <div class="col-md-3 d-flex gap-2">
@@ -109,6 +117,7 @@
       <form class="m-0 user-form" method="post" th:action="@{/admin/users/{id}(id=${u.id})}">
         <input type="hidden" name="search" th:value="${filter.search}">
         <input type="hidden" name="filterTeamId" th:value="${filter.teamId}">
+        <input type="hidden" name="filterActive" th:value="${filter.active}">
         <input type="hidden" name="page" th:value="${userPage.number}">
         <div class="row g-2 align-items-end">
           <div class="col-md-3"><label class="form-label small text-secondary mb-0">نام</label>
@@ -151,6 +160,7 @@
       <form class="d-flex flex-wrap align-items-center gap-2 mt-2 m-0" method="post" th:action="@{/admin/users/{id}/reset-password(id=${u.id})}">
         <input type="hidden" name="search" th:value="${filter.search}">
         <input type="hidden" name="filterTeamId" th:value="${filter.teamId}">
+        <input type="hidden" name="filterActive" th:value="${filter.active}">
         <input type="hidden" name="page" th:value="${userPage.number}">
         <input class="form-control form-control-sm ltr" name="password" placeholder="رمز جدید (حداقل ۶ نویسه)" minlength="6" required autocomplete="new-password" style="max-width:260px">
         <div class="form-check"><input class="form-check-input" type="checkbox" name="mustChangePassword" value="true" th:id="'resetChangePassword'+${u.id}"><label class="form-check-label small" th:for="'resetChangePassword'+${u.id}">تغییر رمز در ورود بعدی الزامی باشد</label></div>
@@ -162,11 +172,11 @@
     <nav class="d-flex align-items-center justify-content-between gap-2" aria-label="صفحه‌بندی کاربران"
          th:if="${userPage.totalPages > 1}">
       <a class="btn btn-outline-secondary" th:if="${userPage.hasPrevious()}"
-         th:href="@{/admin/users(search=${filter.search},teamId=${filter.teamId},page=${userPage.number - 1})}">صفحهٔ قبل</a>
+         th:href="@{/admin/users(search=${filter.search},teamId=${filter.teamId},active=${filter.active},page=${userPage.number - 1})}">صفحهٔ قبل</a>
       <span class="btn btn-outline-secondary disabled" th:unless="${userPage.hasPrevious()}">صفحهٔ قبل</span>
       <span class="small text-secondary">صفحهٔ <span th:text="${userPage.number + 1}"></span> از <span th:text="${userPage.totalPages}"></span></span>
       <a class="btn btn-outline-secondary" th:if="${userPage.hasNext()}"
-         th:href="@{/admin/users(search=${filter.search},teamId=${filter.teamId},page=${userPage.number + 1})}">صفحهٔ بعد</a>
+         th:href="@{/admin/users(search=${filter.search},teamId=${filter.teamId},active=${filter.active},page=${userPage.number + 1})}">صفحهٔ بعد</a>
       <span class="btn btn-outline-secondary disabled" th:unless="${userPage.hasNext()}">صفحهٔ بعد</span>
     </nav>
   </div>
