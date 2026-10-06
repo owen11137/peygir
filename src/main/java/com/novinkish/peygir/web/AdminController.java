@@ -9,6 +9,8 @@ import com.novinkish.peygir.service.SettingService;
 import com.novinkish.peygir.service.UserFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
+import com.novinkish.peygir.service.BusinessException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -63,6 +65,20 @@ public class AdminController {
     public String toggleTeam(@PathVariable Long id, RedirectAttributes ra) {
         admin.toggleTeam(id);
         ra.addFlashAttribute("success", "وضعیت تیم تغییر کرد");
+        return "redirect:/admin/teams";
+    }
+
+    @PostMapping("/teams/{id}/delete")
+    public String deleteTeam(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            admin.deleteTeam(id);
+            ra.addFlashAttribute("success", "تیم حذف شد");
+        } catch (BusinessException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        } catch (DataIntegrityViolationException e) {
+            // وابستگی‌ای که هم‌زمان با درخواست حذف ایجاد شده نیز مانع حذف می‌شود.
+            ra.addFlashAttribute("error", "این تیم دارای اطلاعات وابسته است و قابل حذف نیست؛ صفحه را تازه کنید و دوباره بررسی کنید");
+        }
         return "redirect:/admin/teams";
     }
 

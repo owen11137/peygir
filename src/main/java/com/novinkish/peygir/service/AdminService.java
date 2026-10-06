@@ -2,6 +2,7 @@ package com.novinkish.peygir.service;
 
 import com.novinkish.peygir.domain.*;
 import com.novinkish.peygir.repository.ReasonRepository;
+import com.novinkish.peygir.repository.ReportRepository;
 import com.novinkish.peygir.repository.RoleRepository;
 import com.novinkish.peygir.repository.TeamRepository;
 import com.novinkish.peygir.repository.UserRepository;
@@ -23,6 +24,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AdminService {
     private final TeamRepository teams;
+    private final ReportRepository reports;
     private final UserRepository users;
     private final ReasonRepository reasons;
     private final RoleRepository roles;
@@ -56,6 +58,18 @@ public class AdminService {
         t.setActive(!t.isActive());
         teams.saveAndFlush(t);
         ensureAdminExists();
+    }
+
+    /** تیم دارای گزارش (در هر وضعیت) یا عضو، قابل حذف نیست. */
+    @Transactional
+    public void deleteTeam(Long id) {
+        Team team = teams.findById(id).orElseThrow(() -> new BusinessException("تیم موردنظر پیدا نشد"));
+        if (reports.existsByCallerTeamIdOrTargetTeamId(id, id))
+            throw new BusinessException("این تیم گزارش یا پیگیری ثبت‌شده دارد و قابل حذف نیست؛ می‌توانید آن را غیرفعال کنید");
+        if (users.existsByTeamId(id))
+            throw new BusinessException("این تیم کاربر دارد؛ ابتدا کاربران آن را از بخش «کاربران» به تیم دیگری منتقل کنید، سپس تیم را حذف کنید");
+        teams.delete(team);
+        teams.flush();
     }
 
     // ---------------------------------------------------------------- کاربران

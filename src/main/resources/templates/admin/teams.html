@@ -4,7 +4,7 @@
 <head><title>تیم‌ها</title></head>
 <body>
 <section>
-  <div class="page-head"><div><h1>مدیریت تیم‌ها</h1><div class="sub">تیم‌های غیرفعال در فرم ثبت گزارش نمایش داده نمی‌شوند.</div></div>
+  <div class="page-head"><div><h1>مدیریت تیم‌ها</h1><div class="sub">تیم‌های غیرفعال در فرم ثبت گزارش نمایش داده نمی‌شوند. حذف فقط برای تیم‌های بدون گزارش یا پیگیری و بدون کاربر امکان‌پذیر است.</div></div>
     <div class="actions"><a class="btn btn-outline-ac" th:href="@{/admin/teams/export}"><i class="bi bi-file-earmark-excel"></i> خروجی Excel</a></div></div>
 
   <form class="card-x" method="post" th:action="@{/admin/teams}">
@@ -17,7 +17,7 @@
 
   <div class="card-x p-0"><div class="table-wrap">
     <table class="tbl">
-      <thead><tr><th>نام تیم</th><th>وضعیت</th><th></th></tr></thead>
+      <thead><tr><th>نام تیم</th><th>وضعیت</th><th>عملیات</th></tr></thead>
       <tbody>
       <tr th:each="t : ${teams}">
         <td>
@@ -27,11 +27,14 @@
           </form>
         </td>
         <td><span class="st" th:classappend="${t.active} ? 'st-success' : 'st-secondary'" th:text="${t.active} ? 'فعال' : 'غیرفعال'"></span></td>
-        <td>
+        <td><div class="d-flex flex-wrap gap-2">
           <form class="m-0" method="post" th:action="@{/admin/teams/{id}/toggle(id=${t.id})}">
             <button class="btn btn-sm btn-outline-secondary" type="submit" th:text="${t.active} ? 'غیرفعال‌کردن' : 'فعال‌کردن'"></button>
           </form>
-        </td>
+          <form class="m-0" method="post" th:action="@{/admin/teams/{id}/delete(id=${t.id})}" onsubmit="return confirm('آیا از حذف این تیم مطمئن هستید؟')">
+            <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i> حذف تیم</button>
+          </form>
+        </div></td>
       </tr>
       </tbody>
     </table>

@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<AppUser, Long>, JpaSpecificationExecutor<AppUser> {
     Optional<AppUser> findByUsername(String username);
     boolean existsByUsername(String username);
+    boolean existsByTeamId(Long teamId);
     List<AppUser> findAllByOrderByFullName();
     long countByRolesId(Long roleId);
 }
